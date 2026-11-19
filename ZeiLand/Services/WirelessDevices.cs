@@ -17,10 +17,11 @@ internal sealed record WirelessDevice(string Id, string Name, WirelessKind Kind,
 /// read these (only Bluetooth devices report a battery), so each brand's receiver is asked in its own protocol.
 /// Logitech (HID++), Corsair (Bragi) and the SONiX receivers of Aula-type keyboards are spoken to directly: they
 /// are found by themselves, again whenever a receiver is plugged in or out (WM_DEVICECHANGE), Logitech devices
-/// announce being switched on / off and battery changes, Corsair receivers say when something changed. Every
-/// other brand comes from BatteryHub, a separate program shipped next to ZeiLand (see
-/// <see cref="BatteryHubReceiver"/>). On top of the announcements every device is asked when the island opens
-/// (at most once a minute), every ten minutes and when a receiver is plugged in.
+/// announce being switched on / off and battery changes. Every other brand comes from BatteryHub, a separate
+/// program shipped next to ZeiLand (see <see cref="BatteryHubReceiver"/>). On top of the announcements every
+/// device is asked when the island opens (at most once a minute), every ten minutes and when a receiver is
+/// plugged in; Corsair receivers, which don't say when the headset is switched on or off, every fifteen seconds
+/// while that is announced (<see cref="WatchConnections"/>).
 /// </summary>
 internal sealed class WirelessDevices : IDisposable
 {
@@ -28,18 +29,20 @@ internal sealed class WirelessDevices : IDisposable
     private static readonly HashSet<ushort> Vendors = [0x046D, 0x1B1C, 0x05AC];
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan Stale = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan WatchInterval = TimeSpan.FromSeconds(15);
 
     private readonly HwndSource _host;
     private readonly HwndSourceHook _hook;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _refreshTimer;
     private readonly DispatcherTimer _rescanTimer;
+    private readonly DispatcherTimer _watchTimer;
     private readonly Dictionary<string, WirelessReceiver> _receivers = [];
     private readonly Dictionary<string, WirelessDevice> _devices = [];
     private BatteryHubReceiver? _hub;
     private IntPtr _notification;
     private DateTime _lastRefresh;
-    private bool _enabled, _scanning;
+    private bool _enabled, _scanning, _watchConnections, _watching;
 
     public WirelessDevices(HwndSource host, Dispatcher dispatcher)
     {
@@ -48,6 +51,8 @@ internal sealed class WirelessDevices : IDisposable
         _hook = WndProc;
         _refreshTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = Interval };
         _refreshTimer.Tick += (_, _) => Refresh();
+        _watchTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = WatchInterval };
+        _watchTimer.Tick += (_, _) => Watch();
         // A receiver plugged in or out raises a burst of interface arrivals: one look once it settles.
         _rescanTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1.5) };
         _rescanTimer.Tick += (_, _) =>
@@ -81,6 +86,20 @@ internal sealed class WirelessDevices : IDisposable
         }
     }
 
+    /// <summary>
+    /// Switched on / off is announced: receivers that don't say it themselves (<see
+    /// cref="WirelessReceiver.AnnouncesConnections"/>) are asked every fifteen seconds, one small report each.
+    /// </summary>
+    public bool WatchConnections
+    {
+        get => _watchConnections;
+        set
+        {
+            _watchConnections = value;
+            UpdateWatch();
+        }
+    }
+
     /// <summary>The island opened: fresh readings, unless the last ones are recent.</summary>
     public void RefreshIfStale()
     {
@@ -107,6 +126,7 @@ internal sealed class WirelessDevices : IDisposable
         _rescanTimer.Stop();
         foreach (var receiver in _receivers.Values) receiver.Dispose();
         _receivers.Clear();
+        UpdateWatch();
         _hub?.Dispose();
         _hub = null;
         _devices.Clear();
@@ -144,6 +164,7 @@ internal sealed class WirelessDevices : IDisposable
                 _receivers[key] = receiver;
                 started.Add(receiver.StartAsync());
             }
+            UpdateWatch();
             await Task.WhenAll(started);
             _lastRefresh = DateTime.UtcNow;
             // The devices spoken to directly are known by now, so BatteryHub's copies of them can be left out.
@@ -161,6 +182,24 @@ internal sealed class WirelessDevices : IDisposable
         if (!_enabled) return;
         _lastRefresh = DateTime.UtcNow;
         await Task.WhenAll(_receivers.Values.Append(_hub).OfType<WirelessReceiver>().Select(r => r.RefreshAsync()));
+    }
+
+    /// <summary>The timer runs only while there is a receiver to watch.</summary>
+    private void UpdateWatch() =>
+        _watchTimer.IsEnabled = _enabled && _watchConnections && _receivers.Values.Any(r => !r.AnnouncesConnections);
+
+    private async void Watch()
+    {
+        if (_watching) return; // the last questions are still waiting (a switched-off headset takes a moment)
+        _watching = true;
+        try
+        {
+            await Task.WhenAll(_receivers.Values.Where(r => !r.AnnouncesConnections).ToList().Select(r => r.RefreshAsync()));
+        }
+        finally
+        {
+            _watching = false;
+        }
     }
 
     private bool IsOwned(string id) => _receivers.Values.Any(r => r.Owns(id)) || _hub?.Owns(id) == true;

@@ -418,6 +418,7 @@ public partial class IslandWindow : Window
         if (_wireless is not null)
         {
             _wireless.Enabled = _settings.ShowWirelessDevices;
+            _wireless.WatchConnections = _settings.AnnounceWirelessConnections;
             ShowWirelessDevices(); // a device may have been hidden or shown
         }
         _topWindows.Enabled = _settings.YieldToTopWindows;

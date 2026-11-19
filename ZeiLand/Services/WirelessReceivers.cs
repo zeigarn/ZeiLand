@@ -52,6 +52,12 @@ internal abstract partial class WirelessReceiver : IDisposable
     /// <summary>Asks for the batteries again.</summary>
     public abstract Task RefreshAsync();
 
+    /// <summary>
+    /// False when the receiver doesn't say by itself that a device was switched on or off: then, while that is
+    /// announced, it is asked every few seconds (<see cref="WirelessDevices.WatchConnections"/>).
+    /// </summary>
+    public virtual bool AnnouncesConnections => true;
+
     public virtual void Dispose() => Stopping.Cancel();
 
     protected void Report(WirelessDevice device)
@@ -393,7 +399,8 @@ internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHi
 
 /// <summary>
 /// Corsair's newer wireless receivers (Bragi): property 0x0F is the battery in tenths of a percent, 0x10 its state
-/// (1 charging). The headset is endpoint 0x09 behind the receiver; it doesn't answer while switched off.
+/// (1 charging). The headset is endpoint 0x09 behind the receiver; it doesn't answer while switched off, and the
+/// receiver says nothing when it is switched on or off (the VOID WIRELESS v2's doesn't), so that silence is "off".
 /// </summary>
 internal sealed class CorsairReceiver : WirelessReceiver
 {
@@ -424,6 +431,8 @@ internal sealed class CorsairReceiver : WirelessReceiver
         await RefreshAsync();
     }
 
+    public override bool AnnouncesConnections => false;
+
     public override async Task RefreshAsync()
     {
         if (_channel is null) return;
@@ -432,6 +441,7 @@ internal sealed class CorsairReceiver : WirelessReceiver
         bool connected = level is (0, _);
         int? battery = level is (0, var value) ? Math.Clamp((value + 5) / 10, 0, 100) : null;
         bool charging = connected && await GetAsync(BatteryState) is (0, 1);
+        if (Stopping.IsCancellationRequested) return; // closed while asking: the silence was that, not the headset
         _last = new WirelessDevice("corsair:" + _name, _name, _kind, connected, battery ?? _last?.Battery, charging);
         Report(_last);
     }

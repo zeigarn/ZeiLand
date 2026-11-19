@@ -25,6 +25,7 @@ public partial class IslandWindow
         wireless.Updated += OnWirelessUpdated;
         wireless.Changed += ShowWirelessDevices;
         wireless.Enabled = _settings.ShowWirelessDevices;
+        wireless.WatchConnections = _settings.AnnounceWirelessConnections;
         ShowWirelessDevices(); // in case it had found them already
     }
 
