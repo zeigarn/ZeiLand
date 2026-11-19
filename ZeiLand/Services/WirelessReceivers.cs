@@ -62,10 +62,13 @@ internal abstract partial class WirelessReceiver : IDisposable
 
     protected void Remove(string id) => _remove(id);
 
-    /// <summary>"Gaming Receiver" and the like off the end: the receiver's name, not the device's.</summary>
+    /// <summary>
+    /// "Gaming Receiver", "2.4G" and the like off the end: the receiver's name, not the device's. What is left may be
+    /// empty (a receiver called just "2.4G"); then the kind names the device.
+    /// </summary>
     protected static string WithoutReceiver(string name) => ReceiverSuffix().Replace(name, "").Trim();
 
-    [GeneratedRegex(@"\s*(Gaming\s+)?(USB\s+)?(Receiver|Dongle)\s*$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\s*(2\.4\s*G(Hz)?)?\s*((Gaming\s+)?(USB\s+)?(Receiver|Dongle))?\s*$", RegexOptions.IgnoreCase)]
     private static partial Regex ReceiverSuffix();
 
     /// <summary>
