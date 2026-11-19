@@ -31,6 +31,7 @@ public partial class App : Application
     private UpdateService? _updates;
     private AlwaysOnDisplay? _aod;
     private TrayMenu? _menu;
+    private AssistantLink? _assistant;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -114,6 +115,8 @@ public partial class App : Application
         _aod = new AlwaysOnDisplay(settings, _media, timer, _privacy, _power, _fullscreen, Dispatcher);
         island.MenuRequested += ShowMenu;
         island.SettingsRequested += page => ShowSettings(page);
+        _assistant = new AssistantLink(Dispatcher);
+        island.AttachAssistant(_assistant);
         _tray.MenuRequested += ShowMenu;
         _tray.SettingsRequested += () => ShowSettings(null);
 
@@ -135,6 +138,25 @@ public partial class App : Application
             if (_fullscreen.IsFullscreen) island.BringToTop();
         }
         _fullscreen.Changed += _ => UpdateIslandVisibility();
+
+        // ZEI speaking (what it heard, an answer, a question) while a full-screen video hides the island: shown while
+        // it is on the island, then hidden again.
+        var assistantShown = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        assistantShown.Tick += (_, _) =>
+        {
+            if (island.ShowsAssistant) return;
+            assistantShown.Stop();
+            UpdateIslandVisibility();
+        };
+        _assistant.Received += message =>
+        {
+            if (message.Type is "timer" || (message.Type == "assistant" && message.State is not ("listening" or "thinking"))) return;
+            if (!_fullscreen.IsFullscreen || !settings.HideInFullscreen) return;
+            island.Show();
+            island.BringToTop();
+            assistantShown.Stop();
+            assistantShown.Start();
+        };
         settings.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(AppSettings.HideInFullscreen)) UpdateIslandVisibility();
@@ -148,6 +170,7 @@ public partial class App : Application
         _volume.Initialize();
         _ = _media.InitializeAsync();
         _aod.Start();
+        _assistant.Start();
 
         // After the first install: the welcome guide. After an update: a word from the island.
         string version = UpdateService.CurrentVersion;
@@ -248,6 +271,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _settingsWindow?.Close();
+        _assistant?.Dispose();
         _aod?.Dispose();
         _settingsStore?.Flush();
         _tray?.Dispose();

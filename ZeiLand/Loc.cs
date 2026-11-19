@@ -67,6 +67,12 @@ internal static class Loc
         ["ScreenshotSaved"] = ("Ekran Görüntüleri'ne kaydedildi", "Saved to the Screenshots folder"),
         ["ScreenshotSaveFailed"] = ("Ekran görüntüsü kaydedilemedi", "Couldn't save the screenshot"),
         ["InCall"] = ("Görüşmede: {0}", "In a call: {0}"),
+        ["AssistantListening"] = ("Dinliyorum…", "Listening…"),
+        ["AssistantThinking"] = ("Düşünüyorum…", "Thinking…"),
+        ["AssistantSayYes"] = ("“Evet” ya da “iptal” de", "Say “evet” or “iptal”"),
+        ["AssistantSayOrPick"] = ("Söyle ya da birine tıkla", "Say it or click one"),
+        ["Yes"] = ("Evet", "Yes"),
+        ["Cancel"] = ("İptal", "Cancel"),
 
         // ---- Menu ----
         ["Settings"] = ("Ayarlar", "Settings"),

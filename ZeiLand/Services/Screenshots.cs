@@ -35,8 +35,10 @@ internal static class Screenshots
         try
         {
             // The snipping tool also puts a PNG there. The plain bitmap's unused alpha byte would read as see-through.
+            // Copied into a bitmap of its own: a decoded frame stays tied to this thread even frozen, and saving it on
+            // another one failed ("owned by a different thread"), which left the preview's buttons off for good.
             BitmapSource? image = Clipboard.GetData("PNG") is MemoryStream png
-                ? BitmapFrame.Create(png, BitmapCreateOptions.None, BitmapCacheOption.OnLoad)
+                ? new WriteableBitmap(BitmapFrame.Create(png, BitmapCreateOptions.None, BitmapCacheOption.OnLoad))
                 : Clipboard.ContainsImage() && Clipboard.GetImage() is { } bitmap
                     ? new WriteableBitmap(new FormatConvertedBitmap(bitmap, PixelFormats.Bgr32, null, 0))
                     : null;
@@ -62,7 +64,7 @@ internal static class Screenshots
             using (var file = File.Create(path)) encoder.Save(file);
             return path;
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException or NotSupportedException)
         {
             return null;
         }

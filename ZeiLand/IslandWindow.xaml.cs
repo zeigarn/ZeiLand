@@ -24,7 +24,7 @@ public partial class IslandWindow : Window
         Idle, CompactMedia, CompactTimer, CompactCall, ExpandedMedia, Home,
         Optimize, Devices, TimerPicker, // panels opened from the expanded island
         Volume, Power, Microphone, Output, Notice, // transient
-        Screenshot, Notification, // transient, and they stay while the pointer is on them
+        Screenshot, Notification, Assistant, // transient, and they stay while the pointer is on them
         TimerDone,
     }
 
@@ -166,6 +166,7 @@ public partial class IslandWindow : Window
             [View.Notice] = NoticeView,
             [View.Screenshot] = ScreenshotView,
             [View.Notification] = NotificationView,
+            [View.Assistant] = AssistantView,
             [View.TimerDone] = TimerDoneView,
         };
         foreach (var view in _views.Values) view.RenderTransform = new ScaleTransform(1, 1);
@@ -245,6 +246,7 @@ public partial class IslandWindow : Window
         {
             _hoverTimer.Stop();
             if (_transient == View.Notification) EndTransient(); // a click puts it away
+            else if (_transient == View.Assistant) DismissAssistant();
             else if (_transient != View.Screenshot) SetExpanded(true);
         };
         Root.MouseRightButtonUp += (_, e) =>
@@ -623,7 +625,7 @@ public partial class IslandWindow : Window
     // ---- Screenshots and notifications -------------------------------------------------------
 
     /// <summary>Lingers while the pointer is on it, and a hover doesn't open the island over it.</summary>
-    private bool IsLingering => _transient is View.Screenshot or View.Notification;
+    private bool IsLingering => _transient is View.Screenshot or View.Notification or View.Assistant;
 
     /// <summary>A screenshot just landed on the clipboard: a small preview to open or save it.</summary>
     private async void OnClipboardChanged()

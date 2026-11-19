@@ -600,6 +600,30 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Transient: ZEI, the voice assistant, listening, answering, or asking before a shutdown.
+                 Sized in code for each; it stays while the pointer is on it, and a click puts it away. -->
+            <Grid x:Name="AssistantView" Style="{StaticResource View}" Width="300" Height="40">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="AssistantGlyph" Style="{StaticResource Icon}" Margin="17,0,0,0" HorizontalAlignment="Left" />
+                <StackPanel Margin="46,0,16,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="AssistantText" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="AssistantDetail" Margin="0,1,0,0" FontSize="11" Foreground="{StaticResource SecondaryText}"
+                               TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+                    <!-- ZEI's question's choices ("League of Legends", "YouTube"): a click is the same as saying it. -->
+                    <WrapPanel x:Name="AssistantChoices" Margin="0,6,0,0" Visibility="Collapsed" />
+                </StackPanel>
+                <StackPanel x:Name="AssistantButtons" Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,0"
+                            VerticalAlignment="Center" Visibility="Collapsed">
+                    <Button x:Name="AssistantCancelButton" Style="{StaticResource PillButton}" MinWidth="58"
+                            Content="{DynamicResource Cancel}" />
+                    <Button x:Name="AssistantYesButton" Style="{StaticResource PillButton}" MinWidth="58" Margin="6,0,0,0"
+                            Content="{DynamicResource Yes}" />
+                </StackPanel>
+            </Grid>
+
             <!-- A countdown ended: stays until dismissed. -->
             <Grid x:Name="TimerDoneView" Style="{StaticResource View}" Width="300" Height="48">
                 <TextBlock Style="{StaticResource Icon}" Margin="18,0,0,0" FontSize="17" Text="&#xEA8F;"

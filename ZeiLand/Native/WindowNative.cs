@@ -128,6 +128,10 @@ internal static class WindowNative
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool QueryFullProcessImageName(IntPtr process, int flags, StringBuilder path, ref int size);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetNamedPipeServerProcessId(SafeHandle pipe, out uint processId);
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
     public static extern void SHCreateItemFromParsingName(string path, IntPtr bindContext, ref Guid iid,
         [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory item);
