@@ -27,6 +27,8 @@ public sealed class AppSettings : INotifyPropertyChanged
 
     /// <summary>A Bluetooth headset or speaker connecting / disconnecting, with its battery when it reports one.</summary>
     public bool ShowBluetooth { get; set => Set(ref field, value); } = true;
+    public bool ShowWirelessDevices { get; set => Set(ref field, value); } = true;
+    public IReadOnlyList<string> HiddenWirelessDevices { get; set => Set(ref field, value ?? []); } = [];
 
     /// <summary>A small preview after a screenshot (Win+Shift+S, Snipping Tool), to open or save it.</summary>
     public bool ShowScreenshots { get; set => Set(ref field, value); } = true;

@@ -454,6 +454,16 @@
                         <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowBluetooth}"
                                   Content="{DynamicResource BluetoothNotices}" Tag="{DynamicResource BluetoothNoticesTip}" />
                         <Border Style="{StaticResource Divider}" />
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowWirelessDevices}"
+                                  Content="{DynamicResource WirelessDevices}" Tag="{DynamicResource WirelessDevicesTip}" />
+                        <StackPanel Margin="32,0,16,10" IsEnabled="{Binding ShowWirelessDevices}">
+                            <TextBlock Text="{DynamicResource WirelessDevicesList}" FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{StaticResource SecondaryText}" />
+                            <WrapPanel x:Name="WirelessDevicesPanel" Margin="0,8,0,0" />
+                            <TextBlock x:Name="WirelessDevicesEmpty" Text="{DynamicResource WirelessDevicesEmpty}" Margin="0,0,0,4"
+                                       FontSize="11.5" Foreground="#66FFFFFF" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Border Style="{StaticResource Divider}" />
                         <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowCalls}"
                                   Content="{DynamicResource CallIndicator}" Tag="{DynamicResource CallIndicatorTip}" />
                         <Border Style="{StaticResource Divider}" />

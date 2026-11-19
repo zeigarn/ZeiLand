@@ -32,6 +32,7 @@ public partial class App : Application
     private AlwaysOnDisplay? _aod;
     private TrayMenu? _menu;
     private AssistantLink? _assistant;
+    private WirelessDevices? _wireless;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -117,6 +118,8 @@ public partial class App : Application
         island.SettingsRequested += page => ShowSettings(page);
         _assistant = new AssistantLink(Dispatcher);
         island.AttachAssistant(_assistant);
+        _wireless = new WirelessDevices(_host, Dispatcher);
+        island.AttachWireless(_wireless);
         _tray.MenuRequested += ShowMenu;
         _tray.SettingsRequested += () => ShowSettings(null);
 
@@ -226,6 +229,7 @@ public partial class App : Application
         {
             _settingsWindow = new SettingsWindow(_settingsStore!.Current, _stats!, _media!, _hotkeys!, _updates!,
                 () => RestartElevated(), ShowWelcome, () => _aod?.Preview());
+            if (_wireless is not null) _settingsWindow.AttachWireless(_wireless);
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
             _settingsWindow.Show();
         }
@@ -272,6 +276,7 @@ public partial class App : Application
     {
         _settingsWindow?.Close();
         _assistant?.Dispose();
+        _wireless?.Dispose();
         _aod?.Dispose();
         _settingsStore?.Flush();
         _tray?.Dispose();

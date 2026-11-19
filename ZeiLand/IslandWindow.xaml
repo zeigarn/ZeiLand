@@ -297,6 +297,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid>
@@ -382,7 +383,9 @@
 
                     <controls:TimerStrip x:Name="MediaTimer" Grid.Row="4" Margin="0,8,0,0" Visibility="Collapsed" />
 
-                    <controls:StatsPanel x:Name="MediaStats" Grid.Row="5" Margin="0,8,0,0" />
+                    <StackPanel x:Name="MediaDevices" Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,0" Visibility="Collapsed" />
+
+                    <controls:StatsPanel x:Name="MediaStats" Grid.Row="6" Margin="0,8,0,0" />
                 </Grid>
             </Grid>
 
@@ -413,6 +416,10 @@
                     <controls:ShortcutBar x:Name="HomeShortcuts" Grid.Row="1" Margin="0,10,0,0" Visibility="Collapsed" />
 
                     <controls:TimerStrip x:Name="HomeTimer" Grid.Row="2" Margin="0,10,0,0" Visibility="Collapsed" />
+
+                    <!-- Wireless mice, keyboards and headsets: a chip each, with the battery. -->
+                    <StackPanel x:Name="HomeDevices" Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0"
+                                VerticalAlignment="Top" Visibility="Collapsed" />
 
                     <controls:StatsPanel x:Name="HomeStats" Grid.Row="4" />
                 </Grid>

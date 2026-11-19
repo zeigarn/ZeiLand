@@ -383,6 +383,7 @@ public partial class IslandWindow : Window
             // Hovering wins over a pending volume/charger message.
             _transient = null;
             _transientTimer.Stop();
+            _wireless?.RefreshIfStale();
         }
         else
         {
@@ -399,6 +400,11 @@ public partial class IslandWindow : Window
         _hoverTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(_settings.HoverDelayMs, 1));
         _privacy.Enabled = _settings.ShowPrivacyIndicators || _settings.ShowCalls;
         _notifications.Enabled = _settings.ShowNotifications;
+        if (_wireless is not null)
+        {
+            _wireless.Enabled = _settings.ShowWirelessDevices;
+            ShowWirelessDevices(); // a device may have been hidden or shown
+        }
         _topWindows.Enabled = _settings.YieldToTopWindows;
         ApplyScale();
         _stats.IncludeGpu = _settings.ShowStats && _settings.ShowGpu;
@@ -436,11 +442,11 @@ public partial class IslandWindow : Window
     private void UpdateExpandedSizes()
     {
         bool stats = _settings.ShowStats, timer = _timer.IsActive, clock = _settings.ShowClock;
-        bool shortcuts = _settings.Shortcuts.Count > 0;
-        HomeView.Width = clock || stats || timer || shortcuts ? 380 : 200; // just the quick actions
-        HomeView.Height = 28 + (clock ? 56 : 28) + (shortcuts ? 46 : 0) + (timer ? 46 : 0) + (stats ? 62 : 0);
+        bool shortcuts = _settings.Shortcuts.Count > 0, devices = HomeDevices.Children.Count > 0;
+        HomeView.Width = clock || stats || timer || shortcuts || devices ? 380 : 200; // just the quick actions
+        HomeView.Height = 28 + (clock ? 56 : 28) + (shortcuts ? 46 : 0) + (timer ? 46 : 0) + (devices ? 34 : 0) + (stats ? 62 : 0);
         ExpandedMediaView.Width = MediaViewWidth();
-        ExpandedMediaView.Height = (stats ? 216 : 156) + (shortcuts ? 44 : 0) + (timer ? 44 : 0);
+        ExpandedMediaView.Height = (stats ? 216 : 156) + (shortcuts ? 44 : 0) + (timer ? 44 : 0) + (devices ? 32 : 0);
         MorphTo(_views[_current]);
     }
 
@@ -603,11 +609,16 @@ public partial class IslandWindow : Window
         }
     }
 
-    private void ShowOutput(AudioDevice device, string status, int? battery, int milliseconds = 2500)
+    private void ShowOutput(AudioDevice device, string status, int? battery, int milliseconds = 2500) =>
+        ShowDevice(device.IsHeadphones ? HeadphonesGlyphText : SpeakerGlyphText, device.Name, device.Description, status, battery,
+            milliseconds);
+
+    /// <summary>A device's notice: its icon and name, a status, and the battery if known.</summary>
+    private void ShowDevice(string glyph, string name, string? tooltip, string status, int? battery, int milliseconds)
     {
-        OutputGlyph.Text = device.IsHeadphones ? HeadphonesGlyphText : SpeakerGlyphText;
-        OutputName.Text = device.Name;
-        OutputName.ToolTip = device.Description;
+        OutputGlyph.Text = glyph;
+        OutputName.Text = name;
+        OutputName.ToolTip = tooltip;
         OutputStatus.Text = status;
         ShowOutputBattery(battery);
         ShowTransient(View.Output, milliseconds);

@@ -132,6 +132,65 @@ public partial class SettingsWindow
         MediaSourcesEmpty.Visibility = apps.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    // ---- Wireless devices --------------------------------------------------------------------
+
+    private WirelessDevices? _wireless;
+
+    internal void AttachWireless(WirelessDevices wireless)
+    {
+        _wireless = wireless;
+        wireless.Changed += RenderWirelessDevices;
+        Closed += (_, _) => wireless.Changed -= RenderWirelessDevices;
+        RenderWirelessDevices();
+    }
+
+    /// <summary>Every device found, plus the hidden ones that aren't around now: a chip each, ticked when shown.</summary>
+    private void RenderWirelessDevices()
+    {
+        var hidden = _settings.HiddenWirelessDevices;
+        var found = _wireless?.Devices ?? [];
+        WirelessDevicesPanel.Children.Clear();
+        foreach (var device in found)
+        {
+            string battery = device.Battery is { } percent ? "  " + Loc.Percent(percent / 100.0) : "";
+            AddWirelessChip(device.Id, IslandWindow.GlyphOf(device.Kind), IslandWindow.NameOf(device) + battery, hidden);
+        }
+        foreach (var id in hidden.Where(id => !found.Any(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase))))
+        {
+            // Not around: named from what the settings remember ("logitech:PRO X 2"; the keyboard receivers by kind).
+            string name = id.StartsWith("sonix:", StringComparison.OrdinalIgnoreCase) ? Loc.T("WirelessKeyboard") : id[(id.IndexOf(':') + 1)..];
+            AddWirelessChip(id, IslandWindow.GlyphOf(WirelessKind.Other), name, hidden);
+        }
+        WirelessDevicesEmpty.Visibility = WirelessDevicesPanel.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void AddWirelessChip(string id, string glyph, string text, IReadOnlyList<string> hidden)
+    {
+        var label = new StackPanel { Orientation = Orientation.Horizontal };
+        label.Children.Add(new TextBlock
+        {
+            Text = glyph,
+            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
+            FontSize = 13,
+            Margin = new Thickness(0, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        label.Children.Add(new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center });
+        var chip = new CheckBox
+        {
+            Style = (Style)FindResource("Chip"),
+            Content = label,
+            IsChecked = !hidden.Contains(id, StringComparer.OrdinalIgnoreCase),
+        };
+        chip.Click += (_, _) =>
+        {
+            var list = _settings.HiddenWirelessDevices.Where(d => !d.Equals(id, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (chip.IsChecked != true) list.Add(id);
+            _settings.HiddenWirelessDevices = list;
+        };
+        WirelessDevicesPanel.Children.Add(chip);
+    }
+
     /// <summary>The name in the Start menu; otherwise the id without ".exe" or the package's prefix.</summary>
     private string MediaAppName(string id)
     {

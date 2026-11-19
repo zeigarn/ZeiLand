@@ -46,6 +46,7 @@ The setup:
 | Microphone | The microphone is muted / unmuted (island, shortcut, headset button) | "Microphone off / on" + shortcut (1.8 s) |
 | Sound output | The default output changes (e.g. headphones plugged in) | Headphones / speaker icon + device name (2.5 s) |
 | Bluetooth | A Bluetooth headset or speaker connects / disconnects | Device name + "Connected" / "Disconnected" + battery level if the device reports it, red at 20% and below (3.5 s) |
+| Wireless devices | A mouse, keyboard or headset on a 2.4 GHz receiver | A battery chip each in the open island (red at 20%, a bolt while charging); a notice when its receiver is plugged in or it comes back after a while off, and at 20% / 10% |
 | Screenshot | Win+Shift+S or the Snipping Tool copies a screenshot | Thumbnail + Open / Save (6 s; stays while the pointer is on it) |
 | Notification | A Windows notification pops up (off by default) | App icon, app name, title and first line (5 s; stays while the pointer is on it, a click puts it away) |
 | Power | Charger plugged in / out, battery at 20% and 10% | Battery icon + status (1.8 s) |
@@ -112,7 +113,7 @@ ZeiLand checks the [GitHub releases](https://github.com/zeigarn/ZeiLand/releases
 Every change in the settings window applies at once and is saved to `%LOCALAPPDATA%\ZeiLand\settings.json`.
 
 - **Language:** Turkish or English (in the Behaviour tab; Windows' language by default). Open windows switch at once.
-- **Island / Show on the island:** now playing (and the moving bars), the microphone/camera lights, the volume indicator, charging notices, Bluetooth headsets and speakers, the call indicator, the screenshot preview, notifications (off by default), clock/date, system stats; in the system stats, CPU, CPU °C, GPU, GPU °C and RAM are chosen one by one. Anything turned off isn't measured at all. **Sources:** the apps playing media are listed; an unticked app's media isn't shown on the island (while it plays, another player's is shown, the one that started first).
+- **Island / Show on the island:** now playing (and the moving bars), the microphone/camera lights, the volume indicator, charging notices, Bluetooth headsets and speakers, wireless mice / keyboards / headsets (and which of them), the call indicator, the screenshot preview, notifications (off by default), clock/date, system stats; in the system stats, CPU, CPU °C, GPU, GPU °C and RAM are chosen one by one. Anything turned off isn't measured at all. **Sources:** the apps playing media are listed; an unticked app's media isn't shown on the island (while it plays, another player's is shown, the one that started first).
 - **Island / CPU temperature:** shows its status; installs the driver or restarts the app as administrator if needed.
 - **Appearance:** the closed look (mini player / thin line, with a picture preview), the position ("Centre"), the island size (90 / 100 / 110 / 125%), the GIF in the player, the skip length (off / 5 / 10 / 15 / 30 s) and which quick buttons (timer / stopwatch, sound in / out, microphone) show.
 - **AOD:** as above.
@@ -138,6 +139,18 @@ The call indicator uses the same microphone sessions as the lights (and works wi
 ### Bluetooth headsets and speakers
 
 Windows reports when an audio output becomes active or goes away (`IMMNotificationClient`). Only then does ZeiLand check whether it is a Bluetooth device and read its battery level, from the same property Windows' Bluetooth settings show. Not every device reports its battery; then just the name and the status show. If the level arrives a moment after the connection, the notice is updated in place.
+
+### Wireless mice, keyboards and headsets (2.4 GHz)
+
+Windows reports a battery only for Bluetooth devices; a device on its own USB receiver tells it only in its brand's protocol. ZeiLand finds the receivers by itself (and again whenever one is plugged in or out) and asks them, in these protocols:
+
+| Brand | Receivers | What is read |
+|---|---|---|
+| Logitech | Lightspeed, Unifying, Bolt (HID++ 2.0) | Name, type, battery and charging, for every device on the receiver |
+| Corsair | Newer wireless receivers (Bragi) | Battery and charging |
+| Aula-type keyboards | SONiX 2.4 GHz receivers (Aula F75 Max and others, Epomaker, AJAZZ) | Battery |
+
+Nothing on the device is changed: only questions are sent. Every device found is listed in Settings → Island; unticked ones don't show on the island. Logitech devices say by themselves when they are switched on or off and when the battery changes, and Corsair receivers say when something changed; on top of that every device is asked when the island opens (at most once a minute) and every ten minutes, one small report each. Other brands (Razer, SteelSeries, HyperX…) each need their own protocol and aren't supported yet.
 
 ### Screenshot preview
 
@@ -189,6 +202,7 @@ The sensor starts only while the CPU temperature is shown and the island is firs
 - **The bars follow the real sound, only while visible:** while the compact media view is on screen and music is playing, Core Audio's peak meter (`IAudioMeterInformation`, the source of the volume mixer's bar) is read ~30 times a second. No audio data is taken and no FFT is done. Automatic gain makes quiet and loud songs look equally lively; in silence the bars stop and nothing is redrawn. Reading stops when paused, when the island opens or in full screen.
 - **The bars listen only to the playing app:** the meter is read from the playing app's own audio sessions (the app's bar in the volume mixer); a Discord call or a game's sound doesn't move the bars. If the app has no separate audio session, it falls back to the whole output.
 - **The top window is followed through events:** Windows reports when the foreground window changes, and only when that app's windows move or resize (`SetWinEventHook`); the window's real bounds come from DWM. No timer.
+- **Wireless devices:** a read is always pending on the receivers (it costs nothing while they are quiet); questions go out only as above.
 - **Clipboard and notifications through events:** the clipboard listener and the notification window's WinEvent wake ZeiLand only when something happens; a Bluetooth device's battery is read once, when it connects.
 - **The shortcut isn't a keyboard hook:** `RegisterHotKey`; Windows sends a message only when that key combination is pressed.
 - **The timer doesn't count:** the end of a countdown is awaited with a single timer; the time is redrawn only while on screen and only when a digit changes (once a second).

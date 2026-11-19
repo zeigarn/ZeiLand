@@ -113,6 +113,7 @@ public partial class SettingsWindow : Window
         UpdateCpuTemperatureStatus();
         RenderShortcuts();
         RenderMediaSources();
+        RenderWirelessDevices();
         RenderAod();
         RenderSkip();
         RenderIslandSize();
@@ -189,6 +190,9 @@ public partial class SettingsWindow : Window
                 break;
             case nameof(AppSettings.HiddenMediaApps):
                 RenderMediaSources();
+                break;
+            case nameof(AppSettings.HiddenWirelessDevices):
+                RenderWirelessDevices();
                 break;
             case nameof(AppSettings.AodTrigger) or nameof(AppSettings.AodIdleMinutes) or nameof(AppSettings.AodScreen):
                 RenderAod();

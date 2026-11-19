@@ -46,6 +46,7 @@ Kurulum:
 | Mikrofon | Mikrofon kapatılıp açılınca (ada, kısayol, kulaklık düğmesi) | "Mikrofon kapalı / açık" + kısayol (1,8 sn) |
 | Ses çıkışı | Varsayılan çıkış değişince (ör. kulaklık bağlanınca) | Kulaklık / hoparlör simgesi + cihaz adı (2,5 sn) |
 | Bluetooth | Bluetooth kulaklık veya hoparlör bağlanınca / bağlantı kesilince | Cihaz adı + "Bağlandı" / "Bağlantı kesildi" + cihaz bildiriyorsa pil seviyesi, %20 ve altında kırmızı (3,5 sn) |
+| Kablosuz cihazlar | 2.4 GHz alıcılı fare, klavye veya kulaklık | Açık adada her biri için bir pil göstergesi (%20 ve altında kırmızı, şarjdayken şimşek); alıcısı takılınca ya da bir süre kapalı kaldıktan sonra açılınca ve pil %20 / %10'a inince bildirim |
 | Ekran görüntüsü | Win+Shift+S veya Ekran Alıntısı Aracı bir görüntü kopyalayınca | Küçük resim + Aç / Kaydet (6 sn; fare üzerindeyken kalır) |
 | Bildirim | Bir Windows bildirimi açılınca (varsayılan olarak kapalı) | Uygulama simgesi, uygulama adı, başlık ve ilk satır (5 sn; fare üzerindeyken kalır, tıklayınca kapanır) |
 | Güç | Şarj takılıp çıkınca / pil %20 ve %10 | Pil simgesi + durum (1,8 sn) |
@@ -112,7 +113,7 @@ ZeiLand, [GitHub sürümlerini](https://github.com/zeigarn/ZeiLand/releases) aç
 Ayarlar penceresindeki her değişiklik anında uygulanır ve `%LOCALAPPDATA%\ZeiLand\settings.json` dosyasına kaydedilir.
 
 - **Dil:** Türkçe ya da İngilizce (Davranış sekmesinde; varsayılan Windows'un dili). Açık pencereler anında değişir.
-- **Ada / Adada göster:** çalan medya (ve oynayan çubuklar), mikrofon/kamera ışıkları, ses göstergesi, şarj bildirimleri, Bluetooth kulaklık ve hoparlörler, görüşme göstergesi, ekran görüntüsü önizlemesi, bildirimler (varsayılan olarak kapalı), saat/tarih, sistem bilgileri; sistem bilgilerinde CPU, CPU °C, GPU, GPU °C, RAM tek tek seçilir. Kapatılan bilgi hiç ölçülmez. **Kaynaklar:** medya çalan uygulamalar listelenir; işareti kaldırılanın medyası adada gösterilmez (o çalarken başka bir oynatıcınınki, önce çalanı, gösterilir).
+- **Ada / Adada göster:** çalan medya (ve oynayan çubuklar), mikrofon/kamera ışıkları, ses göstergesi, şarj bildirimleri, Bluetooth kulaklık ve hoparlörler, kablosuz fare / klavye / kulaklıklar (ve hangilerinin görüneceği), görüşme göstergesi, ekran görüntüsü önizlemesi, bildirimler (varsayılan olarak kapalı), saat/tarih, sistem bilgileri; sistem bilgilerinde CPU, CPU °C, GPU, GPU °C, RAM tek tek seçilir. Kapatılan bilgi hiç ölçülmez. **Kaynaklar:** medya çalan uygulamalar listelenir; işareti kaldırılanın medyası adada gösterilmez (o çalarken başka bir oynatıcınınki, önce çalanı, gösterilir).
 - **Ada / CPU sıcaklığı:** durumunu gösterir; gerekiyorsa sürücüyü kurar veya uygulamayı yönetici olarak yeniden başlatır.
 - **Görünüm:** kapalıyken görünüm (mini oynatıcı / ince çizgi, resimli önizlemeyle), konum ("Ortaya al"), ada boyutu (%90 / %100 / %110 / %125), oynatıcıdaki GIF, ileri / geri sarma süresi (kapalı / 5 / 10 / 15 / 30 sn) ve hangi hızlı düğmelerin (zamanlayıcı / kronometre, ses giriş / çıkış, mikrofon) görüneceği.
 - **AOD:** yukarıdaki gibi.
@@ -138,6 +139,18 @@ Görüşme göstergesi ışıklarla aynı mikrofon oturumlarını kullanır (ı�
 ### Bluetooth kulaklık ve hoparlörler
 
 Bir ses çıkışı etkinleşince veya kaybolunca Windows haber verir (`IMMNotificationClient`). ZeiLand ancak o zaman cihazın Bluetooth olup olmadığına bakar ve pil seviyesini Windows'un Bluetooth ayarlarında gösterilen özellikten okur. Her cihaz pilini bildirmez; o zaman yalnızca ad ve durum görünür. Seviye bağlantıdan biraz sonra gelirse bildirim yerinde güncellenir.
+
+### Kablosuz fare, klavye ve kulaklıklar (2.4 GHz)
+
+Windows pil bilgisini yalnızca Bluetooth cihazlar için verir; kendi USB alıcısı olan bir cihaz bunu ancak markasının diliyle söyler. ZeiLand alıcıları kendiliğinden bulur (biri takılıp çıkarılınca yeniden bakar) ve şu protokollerle sorar:
+
+| Marka | Alıcılar | Okunan |
+|---|---|---|
+| Logitech | Lightspeed, Unifying, Bolt (HID++ 2.0) | Alıcıdaki her cihazın adı, türü, pili ve şarj durumu |
+| Corsair | Yeni kablosuz alıcılar (Bragi) | Pil ve şarj durumu |
+| Aula tipi klavyeler | SONiX 2.4 GHz alıcıları (Aula F75 Max ve diğerleri, Epomaker, AJAZZ) | Pil |
+
+Cihazda hiçbir şey değiştirilmez, yalnızca soru gönderilir. Bulunan her cihaz Ayarlar → Ada'da listelenir; işareti kaldırılanlar adada görünmez. Logitech cihazlar açılıp kapandıklarını ve pil değişimini kendileri bildirir, Corsair alıcıları bir şey değişince haber verir; bunun dışında her cihaza ada açılınca (en fazla dakikada bir) ve on dakikada bir, birer küçük raporla sorulur. Diğer markalar (Razer, SteelSeries, HyperX…) her biri ayrı protokol ister ve henüz desteklenmiyor.
 
 ### Ekran görüntüsü önizlemesi
 
@@ -189,6 +202,7 @@ Sensör yalnızca CPU sıcaklığı gösterilirken ve ada ilk açıldığında b
 - **Çubuklar gerçek sese göre, yalnızca görünürken oynar:** Kompakt medya görünümü ekrandayken ve müzik çalarken, saniyede ~30 kez Core Audio'nun tepe seviye ölçeri (`IAudioMeterInformation`, ses karıştırıcısındaki çubuğun kaynağı) okunur. Ses verisi alınmaz, FFT yapılmaz. Otomatik kazanç sessiz ve gürültülü şarkıları eşit canlı gösterir; sessizlikte çubuklar durur ve yeniden çizim olmaz. Duraklatınca, ada açılınca veya tam ekranda okuma da durur.
 - **Çubuklar yalnızca çalan uygulamayı dinler:** Ölçer, medyayı çalan uygulamanın kendi ses oturumlarından okunur (ses karıştırıcısındaki uygulama çubuğu); Discord'daki konuşma veya bir oyunun sesi çubukları oynatmaz. Uygulamanın ayrı bir ses oturumu yoksa tüm çıkışa geri dönülür.
 - **Üstteki pencere olayla izlenir:** Ön plandaki pencere değişince ve yalnızca o uygulamanın pencereleri taşınınca/boyutlanınca Windows haber verir (`SetWinEventHook`); pencerenin gerçek sınırı DWM'den okunur. Zamanlayıcı yok.
+- **Kablosuz cihazlar:** Alıcılarda her zaman bekleyen bir okuma vardır (cihazlar sessizken hiçbir maliyeti yoktur); sorular yalnızca yukarıdaki durumlarda gider.
 - **Pano ve bildirimler olayla gelir:** Pano dinleyicisi ve bildirim penceresinin WinEvent'i ZeiLand'i yalnızca bir şey olunca uyandırır; Bluetooth cihazın pili bir kez, bağlanınca okunur.
 - **Kısayol klavye kancası değildir:** `RegisterHotKey`; Windows yalnızca o tuş birleşimine basılınca mesaj gönderir.
 - **Zamanlayıcı saymaz:** Geri sayımın bitişi tek bir zamanlayıcıyla beklenir; süre, yalnızca ekrandayken ve rakam değiştiği anda (saniyede bir) yeniden çizilir.
