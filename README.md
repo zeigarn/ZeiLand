@@ -59,6 +59,9 @@ The setup:
   <img src="docs/images/en/home.png" width="560" alt="Home: clock, date, quick buttons, shortcuts, a running timer and system stats">
 </p>
 <p align="center">
+  <img src="docs/images/en/wireless.png" width="560" alt="Battery rings for a wireless mouse, keyboard and headset in the open island, in the system stats' columns">
+</p>
+<p align="center">
   <img src="docs/images/en/notices.png" alt="Notices: volume level, microphone off and sound output">
 </p>
 <p align="center">
@@ -66,6 +69,9 @@ The setup:
 </p>
 <p align="center">
   <img src="docs/images/en/screenshot-notification.png" alt="A screenshot preview with Open and Save, and a message notification">
+</p>
+<p align="center">
+  <img src="docs/images/en/download-usb.png" alt="A finished download with Open and Folder, and a USB stick plugged in with Open and Eject">
 </p>
 
 - The **mouse wheel** over the island turns the volume up or down.

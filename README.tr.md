@@ -59,6 +59,9 @@ Kurulum:
   <img src="docs/images/home.png" width="560" alt="Ana ekran: saat, tarih, hızlı düğmeler, kısayollar, çalışan zamanlayıcı ve sistem bilgileri">
 </p>
 <p align="center">
+  <img src="docs/images/wireless.png" width="560" alt="Açık adada kablosuz fare, klavye ve kulaklığın pil halkaları, sistem bilgilerinin sütunlarında">
+</p>
+<p align="center">
   <img src="docs/images/notices.png" alt="Bildirimler: ses seviyesi, mikrofon kapalı ve ses çıkışı">
 </p>
 <p align="center">
@@ -66,6 +69,9 @@ Kurulum:
 </p>
 <p align="center">
   <img src="docs/images/screenshot-notification.png" alt="Aç ve Kaydet düğmeleriyle ekran görüntüsü önizlemesi ve bir mesaj bildirimi">
+</p>
+<p align="center">
+  <img src="docs/images/download-usb.png" alt="Aç ve Klasör düğmeleriyle biten bir indirme, Aç ve Çıkar düğmeleriyle takılan bir USB bellek">
 </p>
 
 - Adanın üzerinde **fare tekerleği** sesi açar veya kısar.
