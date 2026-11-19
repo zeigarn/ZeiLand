@@ -150,7 +150,9 @@ Windows pil bilgisini yalnızca Bluetooth cihazlar için verir; kendi USB alıc�
 | Corsair | Yeni kablosuz alıcılar (Bragi) | Pil ve şarj durumu |
 | Aula tipi klavyeler | SONiX 2.4 GHz alıcıları (Aula F75 Max ve diğerleri, Epomaker, AJAZZ) | Pil |
 
-Cihazda hiçbir şey değiştirilmez, yalnızca soru gönderilir. Bulunan her cihaz Ayarlar → Ada'da listelenir; işareti kaldırılanlar adada görünmez. Logitech cihazlar açılıp kapandıklarını ve pil değişimini kendileri bildirir, Corsair alıcıları bir şey değişince haber verir; bunun dışında her cihaza ada açılınca (en fazla dakikada bir) ve on dakikada bir, birer küçük raporla sorulur. Diğer markalar (Razer, SteelSeries, HyperX…) her biri ayrı protokol ister ve henüz desteklenmiyor.
+Diğer bütün markalar, yaklaşık yüz markanın alıcısını tanıyan ayrı ve açık kaynaklı bir program olan [BatteryHub](https://github.com/krisgfx9/Wireless-Device-Battery-Monitor) (GPL-3.0) üzerinden gelir (Razer, SteelSeries, HyperX, Glorious, Pulsar, ATK/VXE, Lamzu, Keychron, Royal Kludge, ASUS ROG…). Kurulum, onun değiştirilmemiş resmi sürümünü lisansıyla birlikte ZeiLand'in yanındaki `BatteryHub` klasörüne koyar; ZeiLand `BatteryHub.exe --json`'u yalnızca cihazlara zaten sorulduğu anlarda (aşağıda), düşük öncelikle, yaklaşık üç saniyeliğine çalıştırır ve yazdığını okur. İkisinin de bulduğu bir cihaz bir kez, ZeiLand'in kendi alıcısından gösterilir (o, açılıp kapanmayı da anında bildirir).
+
+Cihazda hiçbir şey değiştirilmez, yalnızca soru gönderilir. Bulunan her cihaz Ayarlar → Ada'da listelenir; işareti kaldırılanlar adada görünmez. Logitech cihazlar açılıp kapandıklarını ve pil değişimini kendileri bildirir, Corsair alıcıları bir şey değişince haber verir; bunun dışında her cihaza ada açılınca (en fazla dakikada bir) ve on dakikada bir, birer küçük raporla sorulur. Uyuyan cihazlar (birkaç dakika boşta kalan klavyeler) uykudayken cevap vermez; uyanana kadar son okunan değerle kalır.
 
 ### Ekran görüntüsü önizlemesi
 

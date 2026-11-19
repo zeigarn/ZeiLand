@@ -1,6 +1,9 @@
 using System.Collections.Concurrent;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using ZeiLand.Native;
 
@@ -11,24 +14,29 @@ namespace ZeiLand.Services;
 internal abstract partial class WirelessReceiver : IDisposable
 {
     private readonly Action<WirelessDevice> _report;
+    private readonly Action<string> _remove;
     private readonly HashSet<string> _ids = [];
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _lock = new();
     private (Func<byte[], bool?> Match, TaskCompletionSource<byte[]?> Done)? _pending;
 
-    protected WirelessReceiver(Action<WirelessDevice> report) => _report = report;
+    protected WirelessReceiver(Action<WirelessDevice> report, Action<string> remove)
+    {
+        _report = report;
+        _remove = remove;
+    }
 
     protected CancellationTokenSource Stopping { get; } = new();
 
     /// <summary>The receiver for this interface's collections, if its brand and protocol are known.</summary>
-    public static WirelessReceiver? Create(IReadOnlyList<HidInterface> interfaces, Action<WirelessDevice> report)
+    public static WirelessReceiver? Create(IReadOnlyList<HidInterface> interfaces, Action<WirelessDevice> report, Action<string> remove)
     {
         HidInterface? Find(ushort page, ushort usage) => interfaces.FirstOrDefault(i => i.UsagePage == page && i.Usage == usage);
         return interfaces[0].VendorId switch
         {
-            0x046D when Find(0xFF00, 0x0002) is { OutputLength: 20 } hidpp => new LogitechReceiver(hidpp, Find(0xFF00, 0x0001), report),
-            0x1B1C when Find(0xFF42, 0x0001) is { OutputLength: > 5 } bragi => new CorsairReceiver(bragi, Find(0xFF42, 0x0002), report),
-            0x05AC when Find(0xFF60, 0x0061) is { OutputLength: 33 } sonix => new SonixReceiver(sonix, report),
+            0x046D when Find(0xFF00, 0x0002) is { OutputLength: 20 } hidpp => new LogitechReceiver(hidpp, Find(0xFF00, 0x0001), report, remove),
+            0x1B1C when Find(0xFF42, 0x0001) is { OutputLength: > 5 } bragi => new CorsairReceiver(bragi, Find(0xFF42, 0x0002), report, remove),
+            0x05AC when Find(0xFF60, 0x0061) is { OutputLength: 33 } sonix => new SonixReceiver(sonix, report, remove),
             _ => null,
         };
     }
@@ -51,6 +59,14 @@ internal abstract partial class WirelessReceiver : IDisposable
         lock (_ids) _ids.Add(device.Id);
         _report(device);
     }
+
+    protected void Remove(string id) => _remove(id);
+
+    /// <summary>"Gaming Receiver" and the like off the end: the receiver's name, not the device's.</summary>
+    protected static string WithoutReceiver(string name) => ReceiverSuffix().Replace(name, "").Trim();
+
+    [GeneratedRegex(@"\s*(Gaming\s+)?(USB\s+)?(Receiver|Dongle)\s*$", RegexOptions.IgnoreCase)]
+    private static partial Regex ReceiverSuffix();
 
     /// <summary>
     /// Sends a report and waits for its answer. <paramref name="match"/> says true for the answer, false for an
@@ -188,8 +204,8 @@ internal sealed class HidChannel : IDisposable
 /// feature 0x0005, the battery from 0x1004 (or the older 0x1000 / 0x1001). Devices say when they are switched on or
 /// off (notification 0x41) and when the battery changes, so most news needs no question.
 /// </summary>
-internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHidpp, Action<WirelessDevice> report)
-    : WirelessReceiver(report)
+internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHidpp, Action<WirelessDevice> report,
+    Action<string> remove) : WirelessReceiver(report, remove)
 {
     private const byte ShortReport = 0x10, LongReport = 0x11, SoftwareId = 0x0A;
     private const ushort NameFeature = 0x0005, UnifiedBattery = 0x1004, BatteryStatus = 0x1000, BatteryVoltage = 0x1001;
@@ -388,11 +404,12 @@ internal sealed class CorsairReceiver : WirelessReceiver
     private WirelessDevice? _last;
     private int _eventRefreshPending;
 
-    public CorsairReceiver(HidInterface commands, HidInterface? events, Action<WirelessDevice> report) : base(report)
+    public CorsairReceiver(HidInterface commands, HidInterface? events, Action<WirelessDevice> report, Action<string> remove)
+        : base(report, remove)
     {
         _commands = commands;
         _events = events;
-        _name = Regex.Replace(commands.Product, @"\s*(Gaming\s+)?(Receiver|Dongle)\s*$", "", RegexOptions.IgnoreCase).Trim();
+        _name = WithoutReceiver(commands.Product);
         _kind = KindFromName(_name);
     }
 
@@ -442,7 +459,8 @@ internal sealed class CorsairReceiver : WirelessReceiver
 /// The SONiX 2.4 GHz receivers of Aula (F75 Max and others), Epomaker and AJAZZ keyboards: "20 01" asks for the
 /// battery, the last byte of the report is the sum of the others, and the answer's fifth byte is the percent.
 /// </summary>
-internal sealed class SonixReceiver(HidInterface hid, Action<WirelessDevice> report) : WirelessReceiver(report)
+internal sealed class SonixReceiver(HidInterface hid, Action<WirelessDevice> report, Action<string> remove)
+    : WirelessReceiver(report, remove)
 {
     private readonly string _id = $"sonix:{hid.VendorId:X4}:{hid.ProductId:X4}";
     // The receiver names itself ("2.4G Dongle"), not the keyboard: then the kind names it.
@@ -469,4 +487,151 @@ internal sealed class SonixReceiver(HidInterface hid, Action<WirelessDevice> rep
         if (connected) _lastBattery = reply[4];
         Report(new WirelessDevice(_id, _name, WirelessKind.Keyboard, connected, _lastBattery, false));
     }
+}
+
+/// <summary>
+/// Every other brand, through BatteryHub (https://github.com/krisgfx9/Wireless-Device-Battery-Monitor, GPL-3.0): a
+/// separate program shipped next to ZeiLand that knows about a hundred brands' receivers, and only asks them
+/// questions too. "BatteryHub.exe --json" looks once, prints what it found and quits; ZeiLand runs it only when
+/// the devices are asked anyway (the island opens, every ten minutes, a receiver plugged in), at low priority.
+/// Devices ZeiLand speaks to directly are left out of its list (<see cref="IsCopy"/>).
+/// </summary>
+internal sealed class BatteryHubReceiver(string exe, Action<WirelessDevice> report, Action<string> remove)
+    : WirelessReceiver(report, remove)
+{
+    public const string Prefix = "batteryhub:";
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(20);
+
+    private readonly SemaphoreSlim _running = new(1, 1);
+    private HashSet<string> _found = [];
+    private bool _broken;
+
+    /// <summary>The copy shipped next to ZeiLand, if there is one.</summary>
+    public static string? Find()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "BatteryHub", "BatteryHub.exe");
+        return File.Exists(path) ? path : null;
+    }
+
+    /// <summary>BatteryHub's entry for a device that one of ZeiLand's own receivers already shows.</summary>
+    public static bool IsCopy(WirelessDevice device, IEnumerable<WirelessDevice> others) =>
+        device.Id.StartsWith(Prefix, StringComparison.Ordinal) && others.Any(own =>
+            !own.Id.StartsWith(Prefix, StringComparison.Ordinal) && own.Kind == device.Kind && (own.Name.Length > 0
+                ? device.Name.Contains(own.Name, StringComparison.OrdinalIgnoreCase)
+                // The SONiX keyboard receivers don't name the keyboard; BatteryHub's drivers for them do.
+                : own.Id.StartsWith("sonix:", StringComparison.Ordinal)
+                    && (device.Id.StartsWith(Prefix + "sonix:", StringComparison.Ordinal)
+                        || device.Id.StartsWith(Prefix + "aula:", StringComparison.Ordinal)
+                        || device.Id.StartsWith(Prefix + "via:", StringComparison.Ordinal))));
+
+    public override Task StartAsync() => RefreshAsync();
+
+    public override async Task RefreshAsync()
+    {
+        if (_broken || !await _running.WaitAsync(0)) return; // already looking
+        try
+        {
+            if (await Task.Run(RunAsync) is not { } devices) return;
+            var found = new HashSet<string>();
+            foreach (var device in devices)
+            {
+                found.Add(device.Id);
+                Report(device);
+            }
+            foreach (var gone in _found.Except(found)) Remove(gone);
+            _found = found;
+        }
+        finally
+        {
+            _running.Release();
+        }
+    }
+
+    private async Task<List<WirelessDevice>?> RunAsync()
+    {
+        var start = new ProcessStartInfo(exe, "--json")
+        {
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            WorkingDirectory = Path.GetDirectoryName(exe)!,
+        };
+        Process? process;
+        try
+        {
+            process = Process.Start(start);
+        }
+        catch (Exception e) when (e is Win32Exception or InvalidOperationException)
+        {
+            _broken = true; // blocked or missing: not tried again until the next start
+            return null;
+        }
+        if (process is null) return null;
+        using (process)
+        {
+            try
+            {
+                process.PriorityClass = ProcessPriorityClass.BelowNormal;
+            }
+            catch (Exception e) when (e is Win32Exception or InvalidOperationException)
+            {
+                // Already done.
+            }
+            var output = process.StandardOutput.ReadToEndAsync();
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Stopping.Token);
+            timeout.CancelAfter(Timeout);
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try
+                {
+                    process.Kill();
+                }
+                catch (Exception e) when (e is Win32Exception or InvalidOperationException)
+                {
+                }
+                return null;
+            }
+            return Parse(await output);
+        }
+    }
+
+    private static List<WirelessDevice>? Parse(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var devices = new List<WirelessDevice>();
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                string key = Text(item, "key");
+                if (key.Length == 0) continue;
+                int percent = item.TryGetProperty("percent", out var value) && value.TryGetInt32(out var number) ? number : -1;
+                var kind = Text(item, "kind") switch
+                {
+                    "mouse" => WirelessKind.Mouse,
+                    "keyboard" => WirelessKind.Keyboard,
+                    "headset" => WirelessKind.Headset,
+                    _ => WirelessKind.Other,
+                };
+                devices.Add(new WirelessDevice(Prefix + key, WithoutReceiver(Text(item, "name")), kind, Flag(item, "connected"),
+                    percent is >= 0 and <= 100 ? percent : null, Flag(item, "charging")));
+            }
+            return devices;
+        }
+        catch (Exception e) when (e is JsonException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static string Text(JsonElement item, string name) =>
+        item.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+
+    private static bool Flag(JsonElement item, string name) =>
+        item.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
 }

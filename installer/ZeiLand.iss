@@ -57,6 +57,7 @@ Name: "autostart"; Description: "{cm:TaskAutostart}"
 Source: "out\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+; out\app\BatteryHub: the unmodified official BatteryHub release (GPL-3.0), a separate program; see THIRD-PARTY-NOTICES.txt.
 ; Unmodified official PawnIO setup (GPL-2.0); run from the temp folder, never installed into {app}.
 Source: "vendor\PawnIO_setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Tasks: pawnio
 

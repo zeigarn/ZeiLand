@@ -13,6 +13,20 @@ PawnIO
   Source:  https://github.com/namazso/PawnIO and https://github.com/namazso/PawnIO.Setup
   Website: https://pawnio.eu
 
+BatteryHub 1.1.0 (BatteryHub folder)
+  Reads the battery of wireless devices from the brands ZeiLand doesn't speak to itself. It is a separate
+  program, the unmodified official portable release, shipped next to ZeiLand with its own license
+  (BatteryHub\LICENSE.txt) and notices (BatteryHub\THIRD_PARTY_NOTICES.txt); ZeiLand only runs
+  "BatteryHub.exe --json" and reads what it prints.
+  License: GNU General Public License v3.0
+  Source:  https://github.com/krisgfx9/Wireless-Device-Battery-Monitor/tree/v1.1.0
+           https://github.com/krisgfx9/Wireless-Device-Battery-Monitor/releases/tag/v1.1.0
+
+HeadsetControl 4.3.0 (BatteryHub\headsetcontrol.exe)
+  Comes with BatteryHub, which uses it for some headsets.
+  License: GNU General Public License v3.0
+  Source:  https://github.com/Sapd/HeadsetControl/releases/tag/4.3.0
+
 .NET runtime (included in the self-contained build)
   License: MIT
   Source:  https://github.com/dotnet/runtime and https://github.com/dotnet/wpf

@@ -150,7 +150,9 @@ Windows reports a battery only for Bluetooth devices; a device on its own USB re
 | Corsair | Newer wireless receivers (Bragi) | Battery and charging |
 | Aula-type keyboards | SONiX 2.4 GHz receivers (Aula F75 Max and others, Epomaker, AJAZZ) | Battery |
 
-Nothing on the device is changed: only questions are sent. Every device found is listed in Settings → Island; unticked ones don't show on the island. Logitech devices say by themselves when they are switched on or off and when the battery changes, and Corsair receivers say when something changed; on top of that every device is asked when the island opens (at most once a minute) and every ten minutes, one small report each. Other brands (Razer, SteelSeries, HyperX…) each need their own protocol and aren't supported yet.
+Every other brand comes through [BatteryHub](https://github.com/krisgfx9/Wireless-Device-Battery-Monitor), a separate open-source program (GPL-3.0) that knows about a hundred brands' receivers (Razer, SteelSeries, HyperX, Glorious, Pulsar, ATK/VXE, Lamzu, Keychron, Royal Kludge, ASUS ROG…). The setup puts its unmodified official release in the `BatteryHub` folder next to ZeiLand, with its license; ZeiLand runs `BatteryHub.exe --json` at low priority only when the devices are asked anyway (below), for about three seconds, and reads what it prints. A device that both find is shown once, from ZeiLand's own receiver (which also tells when it is switched on or off right away).
+
+Nothing on the device is changed: only questions are sent. Every device found is listed in Settings → Island; unticked ones don't show on the island. Logitech devices say by themselves when they are switched on or off and when the battery changes, and Corsair receivers say when something changed; on top of that every device is asked when the island opens (at most once a minute) and every ten minutes, one small report each. Devices that sleep (keyboards after a few idle minutes) don't answer while asleep; they keep their last reading until they wake.
 
 ### Screenshot preview
 

@@ -158,7 +158,9 @@ public partial class SettingsWindow
         foreach (var id in hidden.Where(id => !found.Any(d => d.Id.Equals(id, StringComparison.OrdinalIgnoreCase))))
         {
             // Not around: named from what the settings remember ("logitech:PRO X 2"; the keyboard receivers by kind).
-            string name = id.StartsWith("sonix:", StringComparison.OrdinalIgnoreCase) ? Loc.T("WirelessKeyboard") : id[(id.IndexOf(':') + 1)..];
+            string name = id.StartsWith("sonix:", StringComparison.OrdinalIgnoreCase) ? Loc.T("WirelessKeyboard")
+                : id.StartsWith(BatteryHubReceiver.Prefix, StringComparison.OrdinalIgnoreCase) ? Loc.T("WirelessOther")
+                : id[(id.IndexOf(':') + 1)..];
             AddWirelessChip(id, IslandWindow.GlyphOf(WirelessKind.Other), name, hidden);
         }
         WirelessDevicesEmpty.Visibility = WirelessDevicesPanel.Children.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
