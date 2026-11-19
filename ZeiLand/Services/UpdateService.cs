@@ -125,7 +125,7 @@ internal sealed class UpdateService
             using var release = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
             var tag = release.RootElement.GetProperty("tag_name").GetString()?.TrimStart('v', 'V');
-            if (!Version.TryParse(tag, out var latest) || latest <= Version.Parse(CurrentVersion))
+            if (!Version.TryParse(tag, out var latest) || !IsNewer(latest, release.RootElement))
             {
                 SetState(UpdateState.UpToDate);
                 return;
@@ -153,6 +153,28 @@ internal sealed class UpdateService
             SetState(UpdateState.Failed, e is InvalidDataException ? e.Message : Loc.T("GitHubUnreachable"));
         }
     }
+
+    /// <summary>
+    /// A higher version; or the same one built from another commit, when this copy is the installed one: a test build
+    /// installed before the release has the release's number, and would otherwise never be replaced by the release.
+    /// </summary>
+    private static bool IsNewer(Version latest, JsonElement release)
+    {
+        var current = Version.Parse(CurrentVersion);
+        if (latest != current) return latest > current;
+        return IsInstalled && BuildCommit is { Length: >= 7 } built
+            && release.TryGetProperty("target_commitish", out var target) && target.GetString() is { Length: 40 } commit
+            && commit.All(char.IsAsciiHexDigit)
+            && !commit.StartsWith(built, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>The commit this copy was built from (the SDK adds it to the informational version), if known.</summary>
+    private static string? BuildCommit =>
+        Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion is { } version
+        && version.IndexOf('+') is >= 0 and var plus ? version[(plus + 1)..] : null;
+
+    /// <summary>Run from where the setup put it (its uninstaller is next to it), not from a build folder.</summary>
+    private static bool IsInstalled => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
 
     private static async Task<string> DownloadAsync(HttpClient http, JsonElement asset)
     {
