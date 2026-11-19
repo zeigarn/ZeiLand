@@ -426,10 +426,11 @@ internal sealed class CorsairReceiver : WirelessReceiver
 
     public override async Task RefreshAsync()
     {
-        if (_channel is null || await GetAsync(BatteryLevel) is not { } level) return;
-        var (status, value) = level;
-        bool connected = status == 0;
-        int? battery = connected ? Math.Clamp((value + 5) / 10, 0, 100) : null;
+        if (_channel is null) return;
+        // Switched off (or out of range), the headset doesn't answer: asked twice, so one lost answer isn't "off".
+        var level = await GetAsync(BatteryLevel) ?? await GetAsync(BatteryLevel);
+        bool connected = level is (0, _);
+        int? battery = level is (0, var value) ? Math.Clamp((value + 5) / 10, 0, 100) : null;
         bool charging = connected && await GetAsync(BatteryState) is (0, 1);
         _last = new WirelessDevice("corsair:" + _name, _name, _kind, connected, battery ?? _last?.Battery, charging);
         Report(_last);

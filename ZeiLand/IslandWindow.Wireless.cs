@@ -13,7 +13,7 @@ public partial class IslandWindow
     private const string MouseGlyphText = "", KeyboardGlyphText = "", DeviceGlyphText = "";
 
     // Off for less than this (a blip in the radio, a quick restart) is neither "off" nor "back".
-    private static readonly TimeSpan OffGrace = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan OffGrace = TimeSpan.FromSeconds(3);
 
     private WirelessDevices? _wireless;
     private readonly Dictionary<string, DateTime> _wirelessOffSince = [];
