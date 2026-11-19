@@ -24,7 +24,7 @@ public partial class IslandWindow : Window
         Idle, CompactMedia, CompactTimer, CompactCall, ExpandedMedia, Home,
         Optimize, Devices, TimerPicker, // panels opened from the expanded island
         Volume, Power, Microphone, Output, Notice, // transient
-        Screenshot, Notification, Assistant, // transient, and they stay while the pointer is on them
+        Screenshot, Action, Notification, Assistant, // transient, and they stay while the pointer is on them
         TimerDone,
     }
 
@@ -165,6 +165,7 @@ public partial class IslandWindow : Window
             [View.Output] = OutputView,
             [View.Notice] = NoticeView,
             [View.Screenshot] = ScreenshotView,
+            [View.Action] = ActionView,
             [View.Notification] = NotificationView,
             [View.Assistant] = AssistantView,
             [View.TimerDone] = TimerDoneView,
@@ -247,7 +248,7 @@ public partial class IslandWindow : Window
             _hoverTimer.Stop();
             if (_transient == View.Notification) EndTransient(); // a click puts it away
             else if (_transient == View.Assistant) DismissAssistant();
-            else if (_transient != View.Screenshot) SetExpanded(true);
+            else if (_transient is not (View.Screenshot or View.Action)) SetExpanded(true); // their buttons do the work
         };
         Root.MouseRightButtonUp += (_, e) =>
         {
@@ -362,9 +363,23 @@ public partial class IslandWindow : Window
     public bool IsBusy => _expanded || _timer.IsActive || _timerDone || _call is not null;
 
     /// <summary>A short message from the app itself, shown like the volume or charger messages.</summary>
-    public void ShowNotice(string glyph, string text, int milliseconds = 3000)
+    public void ShowNotice(string glyph, string text, int milliseconds = 3000) => ShowNotice(glyph, text, milliseconds, Brushes.White);
+
+    /// <param name="glyphFont">For a symbol the icon font doesn't have; otherwise the icon font.</param>
+    private void ShowNotice(string glyph, string text, int milliseconds, Brush glyphBrush, FontFamily? glyphFont = null)
     {
         NoticeGlyph.Text = glyph;
+        NoticeGlyph.Foreground = glyphBrush;
+        if (glyphFont is null)
+        {
+            NoticeGlyph.ClearValue(TextBlock.FontFamilyProperty);
+            NoticeGlyph.ClearValue(TextBlock.FontSizeProperty);
+        }
+        else
+        {
+            NoticeGlyph.FontFamily = glyphFont;
+            NoticeGlyph.FontSize = 20; // a text font's symbols run smaller than the icons
+        }
         NoticeText.Text = text;
         ShowTransient(View.Notice, milliseconds);
     }
@@ -406,6 +421,7 @@ public partial class IslandWindow : Window
             ShowWirelessDevices(); // a device may have been hidden or shown
         }
         _topWindows.Enabled = _settings.YieldToTopWindows;
+        ApplyExtras();
         ApplyScale();
         _stats.IncludeGpu = _settings.ShowStats && _settings.ShowGpu;
         _stats.IncludeCpuTemperature = _settings.WantsCpuTemperature;
@@ -639,7 +655,7 @@ public partial class IslandWindow : Window
     // ---- Screenshots and notifications -------------------------------------------------------
 
     /// <summary>Lingers while the pointer is on it, and a hover doesn't open the island over it.</summary>
-    private bool IsLingering => _transient is View.Screenshot or View.Notification or View.Assistant;
+    private bool IsLingering => _transient is View.Screenshot or View.Action or View.Notification or View.Assistant;
 
     /// <summary>A screenshot just landed on the clipboard: a small preview to open or save it.</summary>
     private async void OnClipboardChanged()
@@ -684,7 +700,7 @@ public partial class IslandWindow : Window
     /// <summary>A Windows notification, repeated on the island.</summary>
     private void ShowNotification(IslandNotification notification)
     {
-        if (!_settings.ShowNotifications || _expanded || _timerDone || _transient == View.Screenshot) return;
+        if (!_settings.ShowNotifications || _expanded || _timerDone || _transient is View.Screenshot or View.Action) return;
         NotificationIcon.Source = notification.Icon;
         NotificationBell.Visibility = notification.Icon is null ? Visibility.Visible : Visibility.Collapsed;
         NotificationApp.Text = notification.App;

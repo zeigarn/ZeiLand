@@ -598,6 +598,30 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Transient: a download finished or a drive was plugged in, with what to do with it (open; show in its
+                 folder or eject). It stays while the pointer is on it. -->
+            <Grid x:Name="ActionView" Style="{StaticResource View}" Width="372" Height="60">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid x:Name="ActionTarget" Width="32" Height="32" Margin="16,0,12,0" Background="Transparent" Cursor="Hand"
+                      ToolTip="{DynamicResource Open}">
+                    <TextBlock x:Name="ActionGlyph" Style="{StaticResource Icon}" FontSize="20" HorizontalAlignment="Center" />
+                    <Image x:Name="ActionIcon" RenderOptions.BitmapScalingMode="HighQuality" />
+                </Grid>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="ActionTitle" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="ActionDetail" Margin="0,1,0,0" FontSize="11" Foreground="{StaticResource SecondaryText}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,14,0" VerticalAlignment="Center">
+                    <Button x:Name="ActionOpenButton" Style="{StaticResource PillButton}" MinWidth="52" />
+                    <Button x:Name="ActionSecondButton" Style="{StaticResource PillButton}" MinWidth="60" Margin="6,0,0,0" />
+                </StackPanel>
+            </Grid>
+
             <!-- Transient: a Windows notification repeated on the island (when turned on). It stays while the
                  pointer is on it; a click puts it away. -->
             <Grid x:Name="NotificationView" Style="{StaticResource View}" Width="360" Height="62">

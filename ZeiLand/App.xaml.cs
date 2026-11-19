@@ -33,6 +33,9 @@ public partial class App : Application
     private TrayMenu? _menu;
     private AssistantLink? _assistant;
     private WirelessDevices? _wireless;
+    private DownloadWatcher? _downloads;
+    private DriveWatcher? _drives;
+    private LockKeys? _lockKeys;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -120,6 +123,10 @@ public partial class App : Application
         island.AttachAssistant(_assistant);
         _wireless = new WirelessDevices(_host, Dispatcher);
         island.AttachWireless(_wireless);
+        _downloads = new DownloadWatcher(Dispatcher);
+        _drives = new DriveWatcher(_host);
+        _lockKeys = new LockKeys(_host);
+        island.AttachExtras(_downloads, _drives, _lockKeys);
         _tray.MenuRequested += ShowMenu;
         _tray.SettingsRequested += () => ShowSettings(null);
 
@@ -277,6 +284,9 @@ public partial class App : Application
         _settingsWindow?.Close();
         _assistant?.Dispose();
         _wireless?.Dispose();
+        _downloads?.Dispose();
+        _drives?.Dispose();
+        _lockKeys?.Dispose();
         _aod?.Dispose();
         _settingsStore?.Flush();
         _tray?.Dispose();

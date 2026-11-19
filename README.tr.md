@@ -46,8 +46,11 @@ Kurulum:
 | Mikrofon | Mikrofon kapatılıp açılınca (ada, kısayol, kulaklık düğmesi) | "Mikrofon kapalı / açık" + kısayol (1,8 sn) |
 | Ses çıkışı | Varsayılan çıkış değişince (ör. kulaklık bağlanınca) | Kulaklık / hoparlör simgesi + cihaz adı (2,5 sn) |
 | Bluetooth | Bluetooth kulaklık veya hoparlör bağlanınca / bağlantı kesilince | Cihaz adı + "Bağlandı" / "Bağlantı kesildi" + cihaz bildiriyorsa pil seviyesi, %20 ve altında kırmızı (3,5 sn) |
-| Kablosuz cihazlar | 2.4 GHz alıcılı fare, klavye veya kulaklık | Açık adada her biri için bir pil göstergesi (%20 ve altında kırmızı, şarjdayken şimşek); açılınca ve kapanınca (ya da alıcısı takılıp çıkarılınca) adı ve piliyle bildirim (birkaç saniyelik kopmalar sayılmaz, kapatılabilir), pil %20 / %10'a inince de |
+| Kablosuz cihazlar | 2.4 GHz alıcılı fare, klavye veya kulaklık | Açık adada her biri için bir pil halkası, sistem bilgilerinin sütunlarında (%20 ve altında kırmızı, şarjdayken yeşil); açılınca ve kapanınca (ya da alıcısı takılıp çıkarılınca) adı ve piliyle bildirim (birkaç saniyelik kopmalar sayılmaz, kapatılabilir), pil %20 / %10'a inince de |
 | Ekran görüntüsü | Win+Shift+S veya Ekran Alıntısı Aracı bir görüntü kopyalayınca | Küçük resim + Aç / Kaydet (6 sn; fare üzerindeyken kalır) |
+| İndirme | Tarayıcı bir indirmeyi İndirilenler klasörüne bitirince | Dosyanın simgesi, adı ve boyutu + Aç / Klasör (6 sn; fare üzerindeyken kalır) |
+| USB bellek | Bir USB bellek, USB disk veya hafıza kartı takılınca | Adı, sürücü harfi ve boş alanı + Aç / Çıkar (güvenle çıkarır; bir dosyası açıksa söyler) |
+| Caps Lock / Num Lock | Tuşa basılınca | "Caps Lock açık / kapalı" (1,5 sn) |
 | Bildirim | Bir Windows bildirimi açılınca (varsayılan olarak kapalı) | Uygulama simgesi, uygulama adı, başlık ve ilk satır (5 sn; fare üzerindeyken kalır, tıklayınca kapanır) |
 | Güç | Şarj takılıp çıkınca / pil %20 ve %10 | Pil simgesi + durum (1,8 sn) |
 | Süre doldu | Zamanlayıcı bitince | Zil + "Süre doldu", Windows alarm sesi; "Tamam"a basılana kadar kalır |
@@ -113,7 +116,7 @@ ZeiLand, [GitHub sürümlerini](https://github.com/zeigarn/ZeiLand/releases) aç
 Ayarlar penceresindeki her değişiklik anında uygulanır ve `%LOCALAPPDATA%\ZeiLand\settings.json` dosyasına kaydedilir.
 
 - **Dil:** Türkçe ya da İngilizce (Davranış sekmesinde; varsayılan Windows'un dili). Açık pencereler anında değişir.
-- **Ada / Adada göster:** çalan medya (ve oynayan çubuklar), mikrofon/kamera ışıkları, ses göstergesi, şarj bildirimleri, Bluetooth kulaklık ve hoparlörler, kablosuz fare / klavye / kulaklıklar (ve hangilerinin görüneceği), görüşme göstergesi, ekran görüntüsü önizlemesi, bildirimler (varsayılan olarak kapalı), saat/tarih, sistem bilgileri; sistem bilgilerinde CPU, CPU °C, GPU, GPU °C, RAM tek tek seçilir. Kapatılan bilgi hiç ölçülmez. **Kaynaklar:** medya çalan uygulamalar listelenir; işareti kaldırılanın medyası adada gösterilmez (o çalarken başka bir oynatıcınınki, önce çalanı, gösterilir).
+- **Ada / Adada göster:** çalan medya (ve oynayan çubuklar), mikrofon/kamera ışıkları, ses göstergesi, şarj bildirimleri, Bluetooth kulaklık ve hoparlörler, kablosuz fare / klavye / kulaklıklar (ve hangilerinin görüneceği), görüşme göstergesi, ekran görüntüsü önizlemesi, biten indirmeler, USB bellekler, Caps Lock / Num Lock, bildirimler (varsayılan olarak kapalı), saat/tarih, sistem bilgileri; sistem bilgilerinde CPU, CPU °C, GPU, GPU °C, RAM tek tek seçilir. Kapatılan bilgi hiç ölçülmez. **Kaynaklar:** medya çalan uygulamalar listelenir; işareti kaldırılanın medyası adada gösterilmez (o çalarken başka bir oynatıcınınki, önce çalanı, gösterilir).
 - **Ada / CPU sıcaklığı:** durumunu gösterir; gerekiyorsa sürücüyü kurar veya uygulamayı yönetici olarak yeniden başlatır.
 - **Görünüm:** kapalıyken görünüm (mini oynatıcı / ince çizgi, resimli önizlemeyle), konum ("Ortaya al"), ada boyutu (%90 / %100 / %110 / %125), oynatıcıdaki GIF, ileri / geri sarma süresi (kapalı / 5 / 10 / 15 / 30 sn) ve hangi hızlı düğmelerin (zamanlayıcı / kronometre, ses giriş / çıkış, mikrofon) görüneceği.
 - **AOD:** yukarıdaki gibi.
@@ -157,6 +160,14 @@ Cihazda hiçbir şey değiştirilmez, yalnızca soru gönderilir. Bulunan her ci
 ### Ekran görüntüsü önizlemesi
 
 Pano değişince ZeiLand'e haber gelir (`AddClipboardFormatListener`; hiçbir şey yoklanmaz) ve yalnızca Ekran Alıntısı Aracı (Win+Shift+S) bir görüntü koyduysa tepki verir; başka bir yerden resim kopyalamak bir şey göstermez. **Aç** görüntüyü varsayılan resim görüntüleyicide açar, **Kaydet** Resimler\Ekran Görüntüleri klasörüne koyar (Ekran Alıntısı Aracı kendi ayarına göre oraya zaten kaydediyor olabilir). Görüntü `%TEMP%\ZeiLand` altında tek bir geçici dosya olarak tutulur, bir sonrakiyle değişir.
+
+### İndirmeler, USB bellekler, Caps Lock
+
+**İndirmeler:** Tarayıcılar indirmeyi geçici bir adla yazar (Chrome, Edge, Brave, Opera: `.crdownload`; Firefox: `.part`) ve bitince dosyaya kendi adını verir. Windows İndirilenler klasöründeki bu yeniden adlandırmayı haber verir (`FileSystemWatcher`); başka bir şey izlenmez, bir uygulamanın oraya belge kaydetmesi bir şey göstermez. **Aç** dosyayı, **Klasör** İndirilenler'de seçili olarak gösterir; ZeiLand yönetici olarak çalışsa da dosya Gezgin üzerinden, kullanıcı olarak açılır.
+
+**USB bellekler:** Bir sürücü harfi gelince veya gidince Windows bütün pencerelere haber verir (`WM_DEVICECHANGE`); hiçbir şey yoklanmaz. Ağ sürücüleri, `subst` harfleri ve bilgisayarın içindeki diskler gösterilmez. **Çıkar**, görev çubuğundaki "Donanımı güvenle kaldır" ile aynı yolu izler (`CM_Request_Device_Eject`): bir uygulamada dosyası açıksa Windows reddeder, sürücü takılı kalır ve ada bunu söyler.
+
+**Caps Lock / Num Lock:** Windows klavyenin ham girişini ZeiLand'e de verir (`RIDEV_INPUTSINK`; tuşlar kimseden alınmaz). Her tuşun yalnızca kodu kontrol edilir ve yalnızca bu iki tuşa tepki verilir; hiçbir şey saklanmaz ya da gönderilmez. Ayar kapatılınca bu kayıt da kaldırılır.
 
 ### Bildirimler
 
@@ -206,6 +217,7 @@ Sensör yalnızca CPU sıcaklığı gösterilirken ve ada ilk açıldığında b
 - **Üstteki pencere olayla izlenir:** Ön plandaki pencere değişince ve yalnızca o uygulamanın pencereleri taşınınca/boyutlanınca Windows haber verir (`SetWinEventHook`); pencerenin gerçek sınırı DWM'den okunur. Zamanlayıcı yok.
 - **Kablosuz cihazlar:** Alıcılarda her zaman bekleyen bir okuma vardır (cihazlar sessizken hiçbir maliyeti yoktur); sorular yalnızca yukarıdaki durumlarda gider.
 - **Pano ve bildirimler olayla gelir:** Pano dinleyicisi ve bildirim penceresinin WinEvent'i ZeiLand'i yalnızca bir şey olunca uyandırır; Bluetooth cihazın pili bir kez, bağlanınca okunur.
+- **İndirmeler ve USB bellekler olayla gelir:** Klasör izleyicisi ve aygıt mesajı ZeiLand'i yalnızca bir indirme bitince ya da bir sürücü takılınca uyandırır.
 - **Kısayol klavye kancası değildir:** `RegisterHotKey`; Windows yalnızca o tuş birleşimine basılınca mesaj gönderir.
 - **Zamanlayıcı saymaz:** Geri sayımın bitişi tek bir zamanlayıcıyla beklenir; süre, yalnızca ekrandayken ve rakam değiştiği anda (saniyede bir) yeniden çizilir.
 - **Sistem bilgileri yalnızca ada açıkken okunur:** Arka planda hiçbir ölçüm çalışmaz.

@@ -27,6 +27,9 @@ internal static class AppIcons
 
     public static BitmapSource? ForPath(string path, int size) => Cached($"path:{path}:{size}", () => FromShell(path, size));
 
+    /// <summary>A file's icon as Explorer shows it; not kept (a download is shown once).</summary>
+    public static BitmapSource? ForFile(string path, int size) => FromShell(path, size);
+
     private static BitmapSource? Cached(string key, Func<BitmapSource?> load)
     {
         if (!Cache.TryGetValue(key, out var icon)) Cache[key] = icon = load();

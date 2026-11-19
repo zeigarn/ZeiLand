@@ -472,6 +472,15 @@
                         <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowScreenshots}"
                                   Content="{DynamicResource ScreenshotPreview}" Tag="{DynamicResource ScreenshotPreviewTip}" />
                         <Border Style="{StaticResource Divider}" />
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowDownloads}"
+                                  Content="{DynamicResource DownloadNotices}" Tag="{DynamicResource DownloadNoticesTip}" />
+                        <Border Style="{StaticResource Divider}" />
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowDrives}"
+                                  Content="{DynamicResource DriveNotices}" Tag="{DynamicResource DriveNoticesTip}" />
+                        <Border Style="{StaticResource Divider}" />
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowLockKeys}"
+                                  Content="{DynamicResource LockKeyNotices}" Tag="{DynamicResource LockKeyNoticesTip}" />
+                        <Border Style="{StaticResource Divider}" />
                         <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowNotifications}"
                                   Content="{DynamicResource IslandNotifications}" Tag="{DynamicResource IslandNotificationsTip}" />
                         <Border Style="{StaticResource Divider}" />

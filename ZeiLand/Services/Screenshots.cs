@@ -23,9 +23,6 @@ internal static class Screenshots
     private static readonly string TempFolder = Path.Combine(Path.GetTempPath(), "ZeiLand");
     private const string TempPrefix = "screenshot-";
 
-    // FOLDERID_Screenshots: Pictures\Screenshots, wherever the user has moved it.
-    private static readonly Guid ScreenshotsFolder = new("b7bede81-df94-4682-a7d8-57a52620b86f");
-
     public static bool IsFromScreenshotTool(IntPtr clipboardOwner) =>
         WindowNative.GetWindowProcessName(clipboardOwner) is { } name && Tools.Contains(name);
 
@@ -75,7 +72,7 @@ internal static class Screenshots
     {
         try
         {
-            string folder = KnownFolder(ScreenshotsFolder)
+            string folder = KnownFolders.Get(KnownFolders.Screenshots)
                 ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Screenshots");
             Directory.CreateDirectory(folder);
             string stem = $"{name} {DateTime.Now:yyyy-MM-dd HHmmss}", path = Path.Combine(folder, stem + ".png");
@@ -92,20 +89,4 @@ internal static class Screenshots
     /// <summary>Opens it in the default image viewer, as the user (see <see cref="Shortcuts.Launch"/>).</summary>
     public static void Open(string path) =>
         Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = false })?.Dispose();
-
-    private static string? KnownFolder(Guid id)
-    {
-        if (SHGetKnownFolderPath(id, 0, IntPtr.Zero, out var pointer) != 0) return null;
-        try
-        {
-            return Marshal.PtrToStringUni(pointer);
-        }
-        finally
-        {
-            Marshal.FreeCoTaskMem(pointer);
-        }
-    }
-
-    [DllImport("shell32.dll")]
-    private static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid id, uint flags, IntPtr token, out IntPtr path);
 }

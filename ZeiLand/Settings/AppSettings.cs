@@ -34,6 +34,15 @@ public sealed class AppSettings : INotifyPropertyChanged
     /// <summary>A small preview after a screenshot (Win+Shift+S, Snipping Tool), to open or save it.</summary>
     public bool ShowScreenshots { get; set => Set(ref field, value); } = true;
 
+    /// <summary>A download finishing in the Downloads folder: its name and size, to open it or show it in its folder.</summary>
+    public bool ShowDownloads { get; set => Set(ref field, value); } = true;
+
+    /// <summary>A USB drive or memory card plugged in: its name and free space, to open it or eject it safely.</summary>
+    public bool ShowDrives { get; set => Set(ref field, value); } = true;
+
+    /// <summary>Caps Lock and Num Lock switched on or off: a short notice.</summary>
+    public bool ShowLockKeys { get; set => Set(ref field, value); } = true;
+
     /// <summary>A call app (Discord, Teams, Zoom…) using the microphone: the compact island shows the call and its length.</summary>
     public bool ShowCalls { get; set => Set(ref field, value); } = true;
 

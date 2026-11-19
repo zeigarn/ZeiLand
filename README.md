@@ -46,8 +46,11 @@ The setup:
 | Microphone | The microphone is muted / unmuted (island, shortcut, headset button) | "Microphone off / on" + shortcut (1.8 s) |
 | Sound output | The default output changes (e.g. headphones plugged in) | Headphones / speaker icon + device name (2.5 s) |
 | Bluetooth | A Bluetooth headset or speaker connects / disconnects | Device name + "Connected" / "Disconnected" + battery level if the device reports it, red at 20% and below (3.5 s) |
-| Wireless devices | A mouse, keyboard or headset on a 2.4 GHz receiver | A battery chip each in the open island (red at 20%, a bolt while charging); a notice with its name and battery when it is switched on or off (or its receiver plugged in or out; drop-outs of a few seconds don't count, and this can be turned off), and at 20% / 10% |
+| Wireless devices | A mouse, keyboard or headset on a 2.4 GHz receiver | A battery ring each in the open island, in the system stats' columns (red at 20%, green while charging); a notice with its name and battery when it is switched on or off (or its receiver plugged in or out; drop-outs of a few seconds don't count, and this can be turned off), and at 20% / 10% |
 | Screenshot | Win+Shift+S or the Snipping Tool copies a screenshot | Thumbnail + Open / Save (6 s; stays while the pointer is on it) |
+| Download | A browser finishes a download into the Downloads folder | The file's icon, name and size + Open / Folder (6 s; stays while the pointer is on it) |
+| USB drive | A USB stick, USB disk or memory card is plugged in | Its name, drive letter and free space + Open / Eject (ejects it safely; says so if a file on it is open) |
+| Caps Lock / Num Lock | The key is pressed | "Caps Lock on / off" (1.5 s) |
 | Notification | A Windows notification pops up (off by default) | App icon, app name, title and first line (5 s; stays while the pointer is on it, a click puts it away) |
 | Power | Charger plugged in / out, battery at 20% and 10% | Battery icon + status (1.8 s) |
 | Time's up | A timer ends | Bell + "Time's up", Windows alarm sound; stays until "OK" is pressed |
@@ -113,7 +116,7 @@ ZeiLand checks the [GitHub releases](https://github.com/zeigarn/ZeiLand/releases
 Every change in the settings window applies at once and is saved to `%LOCALAPPDATA%\ZeiLand\settings.json`.
 
 - **Language:** Turkish or English (in the Behaviour tab; Windows' language by default). Open windows switch at once.
-- **Island / Show on the island:** now playing (and the moving bars), the microphone/camera lights, the volume indicator, charging notices, Bluetooth headsets and speakers, wireless mice / keyboards / headsets (and which of them), the call indicator, the screenshot preview, notifications (off by default), clock/date, system stats; in the system stats, CPU, CPU °C, GPU, GPU °C and RAM are chosen one by one. Anything turned off isn't measured at all. **Sources:** the apps playing media are listed; an unticked app's media isn't shown on the island (while it plays, another player's is shown, the one that started first).
+- **Island / Show on the island:** now playing (and the moving bars), the microphone/camera lights, the volume indicator, charging notices, Bluetooth headsets and speakers, wireless mice / keyboards / headsets (and which of them), the call indicator, the screenshot preview, finished downloads, USB drives, Caps Lock / Num Lock, notifications (off by default), clock/date, system stats; in the system stats, CPU, CPU °C, GPU, GPU °C and RAM are chosen one by one. Anything turned off isn't measured at all. **Sources:** the apps playing media are listed; an unticked app's media isn't shown on the island (while it plays, another player's is shown, the one that started first).
 - **Island / CPU temperature:** shows its status; installs the driver or restarts the app as administrator if needed.
 - **Appearance:** the closed look (mini player / thin line, with a picture preview), the position ("Centre"), the island size (90 / 100 / 110 / 125%), the GIF in the player, the skip length (off / 5 / 10 / 15 / 30 s) and which quick buttons (timer / stopwatch, sound in / out, microphone) show.
 - **AOD:** as above.
@@ -157,6 +160,14 @@ Nothing on the device is changed: only questions are sent. Every device found is
 ### Screenshot preview
 
 ZeiLand is told when the clipboard changes (`AddClipboardFormatListener`; nothing is polled) and reacts only when the Snipping Tool (Win+Shift+S) has put an image there; copying a picture anywhere else shows nothing. **Open** opens the screenshot in the default image viewer, **Save** puts it in Pictures\Screenshots (depending on its own settings, the Snipping Tool may save it there too). The screenshot is kept as a single temporary file under `%TEMP%\ZeiLand`, replaced by the next one.
+
+### Downloads, USB drives, Caps Lock
+
+**Downloads:** browsers write a download under a temporary name (Chrome, Edge, Brave, Opera: `.crdownload`; Firefox: `.part`) and give the file its own name once it's complete. Windows reports that rename in the Downloads folder (`FileSystemWatcher`); nothing else is watched, and an app saving a document there shows nothing. **Open** opens the file, **Folder** shows it selected in Downloads; even when ZeiLand runs as administrator, the file is opened through Explorer, as the user.
+
+**USB drives:** Windows tells every window when a drive letter comes or goes (`WM_DEVICECHANGE`); nothing is polled. Network drives, `subst` letters and disks built into the PC aren't shown. **Eject** goes the same way as the taskbar's "Safely Remove Hardware" (`CM_Request_Device_Eject`): if an app has a file on it open, Windows refuses, the drive stays, and the island says so.
+
+**Caps Lock / Num Lock:** Windows hands ZeiLand the keyboard's raw input too (`RIDEV_INPUTSINK`; keys aren't taken from anyone). Of each key only its code is checked, and only these two keys are acted on; nothing is kept or sent. Turning the setting off removes the registration as well.
 
 ### Notifications
 
@@ -206,6 +217,7 @@ The sensor starts only while the CPU temperature is shown and the island is firs
 - **The top window is followed through events:** Windows reports when the foreground window changes, and only when that app's windows move or resize (`SetWinEventHook`); the window's real bounds come from DWM. No timer.
 - **Wireless devices:** a read is always pending on the receivers (it costs nothing while they are quiet); questions go out only as above.
 - **Clipboard and notifications through events:** the clipboard listener and the notification window's WinEvent wake ZeiLand only when something happens; a Bluetooth device's battery is read once, when it connects.
+- **Downloads and USB drives through events:** the folder watcher and the device message wake ZeiLand only when a download finishes or a drive is plugged in.
 - **The shortcut isn't a keyboard hook:** `RegisterHotKey`; Windows sends a message only when that key combination is pressed.
 - **The timer doesn't count:** the end of a countdown is awaited with a single timer; the time is redrawn only while on screen and only when a digit changes (once a second).
 - **System stats are read only while the island is open:** no measurement runs in the background.
