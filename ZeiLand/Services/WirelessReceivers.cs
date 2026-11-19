@@ -405,6 +405,7 @@ internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHi
 internal sealed class CorsairReceiver : WirelessReceiver
 {
     private const byte Device = 0x09, Get = 0x02, BatteryLevel = 0x0F, BatteryState = 0x10;
+    private static readonly TimeSpan StateEvery = TimeSpan.FromSeconds(10);
 
     private readonly HidInterface _commands;
     private readonly HidInterface? _events;
@@ -412,7 +413,8 @@ internal sealed class CorsairReceiver : WirelessReceiver
     private readonly WirelessKind _kind;
     private HidChannel? _channel;
     private WirelessDevice? _last;
-    private int _eventRefreshPending;
+    private DateTime _stateAsked;
+    private int _eventRefreshPending, _refreshing;
 
     public CorsairReceiver(HidInterface commands, HidInterface? events, Action<WirelessDevice> report, Action<string> remove)
         : base(report, remove)
@@ -435,15 +437,31 @@ internal sealed class CorsairReceiver : WirelessReceiver
 
     public override async Task RefreshAsync()
     {
-        if (_channel is null) return;
-        // Switched off (or out of range), the headset doesn't answer: asked twice, so one lost answer isn't "off".
-        var level = await GetAsync(BatteryLevel) ?? await GetAsync(BatteryLevel);
-        bool connected = level is (0, _);
-        int? battery = level is (0, var value) ? Math.Clamp((value + 5) / 10, 0, 100) : null;
-        bool charging = connected && await GetAsync(BatteryState) is (0, 1);
-        if (Stopping.IsCancellationRequested) return; // closed while asking: the silence was that, not the headset
-        _last = new WirelessDevice("corsair:" + _name, _name, _kind, connected, battery ?? _last?.Battery, charging);
-        Report(_last);
+        // Asked every second while switching on / off is announced: one look at a time, and only a change is reported.
+        if (_channel is null || Interlocked.Exchange(ref _refreshing, 1) == 1) return;
+        try
+        {
+            // Switched off (or out of range), the headset doesn't answer: asked twice, so one lost answer isn't "off".
+            var level = await GetAsync(BatteryLevel) ?? await GetAsync(BatteryLevel);
+            bool connected = level is (0, _);
+            int? battery = level is (0, var value) ? Math.Clamp((value + 5) / 10, 0, 100) : null;
+            // Charging is asked again when something changed, and at least every ten seconds (a cable plugged in).
+            bool charging = connected && _last?.Charging == true;
+            if (connected && (_last is not { Connected: true } || _last.Battery != battery || DateTime.UtcNow - _stateAsked >= StateEvery))
+            {
+                charging = await GetAsync(BatteryState) is (0, 1);
+                _stateAsked = DateTime.UtcNow;
+            }
+            if (Stopping.IsCancellationRequested) return; // closed while asking: the silence was that, not the headset
+            var device = new WirelessDevice("corsair:" + _name, _name, _kind, connected, battery ?? _last?.Battery, charging);
+            if (device == _last) return;
+            _last = device;
+            Report(device);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _refreshing, 0);
+        }
     }
 
     private async void OnEvent()
@@ -463,8 +481,9 @@ internal sealed class CorsairReceiver : WirelessReceiver
 
     private async Task<(int Status, int Value)?> GetAsync(byte property)
     {
+        // The answer comes within a few tens of milliseconds; half a second without one is silence.
         var reply = await AskAsync(_channel!, [_commands.OutputReportId, Device, Get, property, 0x00],
-            r => r.Length > 5 && r[2] == Get ? true : null);
+            r => r.Length > 5 && r[2] == Get ? true : null, 500);
         return reply is null ? null : (reply[3], reply[4] | reply[5] << 8);
     }
 }

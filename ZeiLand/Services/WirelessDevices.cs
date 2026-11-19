@@ -20,8 +20,8 @@ internal sealed record WirelessDevice(string Id, string Name, WirelessKind Kind,
 /// announce being switched on / off and battery changes. Every other brand comes from BatteryHub, a separate
 /// program shipped next to ZeiLand (see <see cref="BatteryHubReceiver"/>). On top of the announcements every
 /// device is asked when the island opens (at most once a minute), every ten minutes and when a receiver is
-/// plugged in; Corsair receivers, which don't say when the headset is switched on or off, every fifteen seconds
-/// while that is announced (<see cref="WatchConnections"/>).
+/// plugged in; Corsair receivers, which don't say when the headset is switched on or off, every second while that
+/// is announced (<see cref="WatchConnections"/>).
 /// </summary>
 internal sealed class WirelessDevices : IDisposable
 {
@@ -29,7 +29,7 @@ internal sealed class WirelessDevices : IDisposable
     private static readonly HashSet<ushort> Vendors = [0x046D, 0x1B1C, 0x05AC];
     private static readonly TimeSpan Interval = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan Stale = TimeSpan.FromMinutes(1);
-    private static readonly TimeSpan WatchInterval = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan WatchInterval = TimeSpan.FromSeconds(1);
 
     private readonly HwndSource _host;
     private readonly HwndSourceHook _hook;
@@ -88,7 +88,8 @@ internal sealed class WirelessDevices : IDisposable
 
     /// <summary>
     /// Switched on / off is announced: receivers that don't say it themselves (<see
-    /// cref="WirelessReceiver.AnnouncesConnections"/>) are asked every fifteen seconds, one small report each.
+    /// cref="WirelessReceiver.AnnouncesConnections"/>) are asked every second, one small report each (an answer takes
+    /// a few tens of milliseconds, on a worker thread).
     /// </summary>
     public bool WatchConnections
     {
@@ -194,7 +195,9 @@ internal sealed class WirelessDevices : IDisposable
         _watching = true;
         try
         {
-            await Task.WhenAll(_receivers.Values.Where(r => !r.AnnouncesConnections).ToList().Select(r => r.RefreshAsync()));
+            var receivers = _receivers.Values.Where(r => !r.AnnouncesConnections).ToList();
+            // Off the UI thread: the answers don't wake it, only a change does (through Report).
+            await Task.Run(() => Task.WhenAll(receivers.Select(r => r.RefreshAsync())));
         }
         finally
         {
