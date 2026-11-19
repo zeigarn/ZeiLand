@@ -46,7 +46,7 @@ Kurulum:
 | Mikrofon | Mikrofon kapatılıp açılınca (ada, kısayol, kulaklık düğmesi) | "Mikrofon kapalı / açık" + kısayol (1,8 sn) |
 | Ses çıkışı | Varsayılan çıkış değişince (ör. kulaklık bağlanınca) | Kulaklık / hoparlör simgesi + cihaz adı (2,5 sn) |
 | Bluetooth | Bluetooth kulaklık veya hoparlör bağlanınca / bağlantı kesilince | Cihaz adı + "Bağlandı" / "Bağlantı kesildi" + cihaz bildiriyorsa pil seviyesi, %20 ve altında kırmızı (3,5 sn) |
-| Kablosuz cihazlar | 2.4 GHz alıcılı fare, klavye veya kulaklık | Açık adada her biri için bir pil göstergesi (%20 ve altında kırmızı, şarjdayken şimşek); alıcısı takılınca ya da bir süre kapalı kaldıktan sonra açılınca ve pil %20 / %10'a inince bildirim |
+| Kablosuz cihazlar | 2.4 GHz alıcılı fare, klavye veya kulaklık | Açık adada her biri için bir pil göstergesi (%20 ve altında kırmızı, şarjdayken şimşek); açılınca ve kapanınca (ya da alıcısı takılıp çıkarılınca) adı ve piliyle bildirim (birkaç saniyelik kopmalar sayılmaz, kapatılabilir), pil %20 / %10'a inince de |
 | Ekran görüntüsü | Win+Shift+S veya Ekran Alıntısı Aracı bir görüntü kopyalayınca | Küçük resim + Aç / Kaydet (6 sn; fare üzerindeyken kalır) |
 | Bildirim | Bir Windows bildirimi açılınca (varsayılan olarak kapalı) | Uygulama simgesi, uygulama adı, başlık ve ilk satır (5 sn; fare üzerindeyken kalır, tıklayınca kapanır) |
 | Güç | Şarj takılıp çıkınca / pil %20 ve %10 | Pil simgesi + durum (1,8 sn) |

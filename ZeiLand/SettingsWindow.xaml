@@ -456,6 +456,8 @@
                         <Border Style="{StaticResource Divider}" />
                         <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding ShowWirelessDevices}"
                                   Content="{DynamicResource WirelessDevices}" Tag="{DynamicResource WirelessDevicesTip}" />
+                        <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AnnounceWirelessConnections}" IsEnabled="{Binding ShowWirelessDevices}"
+                                  Margin="16,0,0,0" Content="{DynamicResource WirelessAnnounce}" Tag="{DynamicResource WirelessAnnounceTip}" />
                         <StackPanel Margin="32,0,16,10" IsEnabled="{Binding ShowWirelessDevices}">
                             <TextBlock Text="{DynamicResource WirelessDevicesList}" FontSize="11.5" TextWrapping="Wrap"
                                        Foreground="{StaticResource SecondaryText}" />

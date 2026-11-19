@@ -46,7 +46,7 @@ The setup:
 | Microphone | The microphone is muted / unmuted (island, shortcut, headset button) | "Microphone off / on" + shortcut (1.8 s) |
 | Sound output | The default output changes (e.g. headphones plugged in) | Headphones / speaker icon + device name (2.5 s) |
 | Bluetooth | A Bluetooth headset or speaker connects / disconnects | Device name + "Connected" / "Disconnected" + battery level if the device reports it, red at 20% and below (3.5 s) |
-| Wireless devices | A mouse, keyboard or headset on a 2.4 GHz receiver | A battery chip each in the open island (red at 20%, a bolt while charging); a notice when its receiver is plugged in or it comes back after a while off, and at 20% / 10% |
+| Wireless devices | A mouse, keyboard or headset on a 2.4 GHz receiver | A battery chip each in the open island (red at 20%, a bolt while charging); a notice with its name and battery when it is switched on or off (or its receiver plugged in or out; drop-outs of a few seconds don't count, and this can be turned off), and at 20% / 10% |
 | Screenshot | Win+Shift+S or the Snipping Tool copies a screenshot | Thumbnail + Open / Save (6 s; stays while the pointer is on it) |
 | Notification | A Windows notification pops up (off by default) | App icon, app name, title and first line (5 s; stays while the pointer is on it, a click puts it away) |
 | Power | Charger plugged in / out, battery at 20% and 10% | Battery icon + status (1.8 s) |

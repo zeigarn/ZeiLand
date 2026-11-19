@@ -260,8 +260,8 @@ internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHi
         {
             return;
         }
-        if (_slots.TryGetValue(index, out var known)) await ReadBatteryAsync(index, known);
-        else await ProbeAsync(index);
+        if (!_slots.TryGetValue(index, out var known)) await ProbeAsync(index);
+        else if (!await ReadBatteryAsync(index, known)) Publish(index, known, true, null, false); // on, battery not told yet
     }
 
     private async Task ProbeAsync(byte index)
@@ -298,13 +298,14 @@ internal sealed class LogitechReceiver(HidInterface hidpp, HidInterface? shortHi
         await ReadBatteryAsync(index, slot);
     }
 
-    private async Task ReadBatteryAsync(byte index, Slot slot)
+    /// <summary>False when there was no answer: asleep or switched off, which the 0x41 notifications tell.</summary>
+    private async Task<bool> ReadBatteryAsync(byte index, Slot slot)
     {
-        if (slot.BatteryIndex == 0) return; // no battery (e.g. a mouse on its cable): nothing to show
-        // No answer: asleep or switched off. That is left to the 0x41 notifications; a sleeping mouse isn't "gone".
-        if (await CallAsync(index, slot.BatteryIndex, slot.BatteryFeature == UnifiedBattery ? (byte)1 : (byte)0) is not { } reply) return;
+        if (slot.BatteryIndex == 0) return true; // no battery (e.g. a mouse on its cable): nothing to show
+        if (await CallAsync(index, slot.BatteryIndex, slot.BatteryFeature == UnifiedBattery ? (byte)1 : (byte)0) is not { } reply) return false;
         var (battery, charging) = ParseBattery(slot.BatteryFeature, reply);
         Publish(index, slot, true, battery, charging);
+        return true;
     }
 
     private void Publish(byte index, Slot slot, bool connected, int? battery, bool charging)

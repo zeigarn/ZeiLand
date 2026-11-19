@@ -5,14 +5,14 @@ using ZeiLand.Services;
 
 namespace ZeiLand;
 
-// Wireless mice, keyboards and headsets: a battery chip each in the open island, and notices when a receiver is
-// plugged in, a device comes back after a long while switched off, or a battery runs low.
+// Wireless mice, keyboards and headsets: a battery chip each in the open island, and notices when one is switched
+// on or off (or its receiver plugged in or out) and when a battery runs low.
 public partial class IslandWindow
 {
     private const string MouseGlyphText = "", KeyboardGlyphText = "", DeviceGlyphText = "";
 
-    // A device switched off for less than this (asleep, a quick restart) isn't announced when it comes back.
-    private static readonly TimeSpan AnnounceAfter = TimeSpan.FromMinutes(10);
+    // Off for less than this (a blip in the radio, a quick restart) is neither "off" nor "back".
+    private static readonly TimeSpan OffGrace = TimeSpan.FromSeconds(5);
 
     private WirelessDevices? _wireless;
     private readonly Dictionary<string, DateTime> _wirelessOffSince = [];
@@ -79,17 +79,22 @@ public partial class IslandWindow
         var now = DateTime.UtcNow;
         if (!device.Connected)
         {
-            if (previous is not { Connected: false }) _wirelessOffSince[device.Id] = now;
+            if (previous is not { Connected: false })
+            {
+                _wirelessOffSince[device.Id] = now;
+                if (previous is { Connected: true }) AnnounceOff(device, now);
+            }
             return;
         }
-        if (_settings.HiddenWirelessDevices.Contains(device.Id, StringComparer.OrdinalIgnoreCase) || _expanded) return;
+        bool hidden = _settings.HiddenWirelessDevices.Contains(device.Id, StringComparer.OrdinalIgnoreCase);
 
-        // Here again: its receiver was plugged in, or it was off for a good while.
+        // Switched on (or its receiver plugged in), unless it was off only for a moment.
         bool back = previous is null
             ? _wireless?.Settled == true
-            : !previous.Connected && (!_wirelessOffSince.TryGetValue(device.Id, out var since) || now - since >= AnnounceAfter);
+            : !previous.Connected && (!_wirelessOffSince.TryGetValue(device.Id, out var since) || now - since >= OffGrace);
         _wirelessOffSince.Remove(device.Id);
-        if (back)
+        if (hidden || _expanded) return;
+        if (back && _settings.AnnounceWirelessConnections)
         {
             ShowDevice(GlyphOf(device.Kind), NameOf(device), null, Loc.T("Connected"), device.Battery, 3500);
             return;
@@ -105,6 +110,17 @@ public partial class IslandWindow
         if (threshold == 0 || (_wirelessWarned.TryGetValue(device.Id, out var warned) && warned <= threshold)) return;
         _wirelessWarned[device.Id] = threshold;
         ShowDevice(GlyphOf(device.Kind), NameOf(device), null, Loc.T("BatteryLow"), battery, 4000);
+    }
+
+    /// <summary>"Disconnected", once it has stayed off for a few seconds.</summary>
+    private async void AnnounceOff(WirelessDevice device, DateTime since)
+    {
+        await Task.Delay(OffGrace);
+        // Back on meanwhile (or off again since): nothing to say.
+        if (!_wirelessOffSince.TryGetValue(device.Id, out var off) || off != since) return;
+        if (!_settings.AnnounceWirelessConnections || _expanded
+            || _settings.HiddenWirelessDevices.Contains(device.Id, StringComparer.OrdinalIgnoreCase)) return;
+        ShowDevice(GlyphOf(device.Kind), NameOf(device), null, Loc.T("Disconnected"), null, 3000);
     }
 
     internal static string NameOf(WirelessDevice device) => device.Name.Length > 0 ? device.Name : Loc.T(device.Kind switch
