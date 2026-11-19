@@ -415,9 +415,8 @@ public partial class IslandWindow : Window
         // Without the clock, the battery and quick actions are all the header has: centre them.
         HomeTools.HorizontalAlignment = clock ? HorizontalAlignment.Right : HorizontalAlignment.Center;
         HomeStats.Visibility = stats ? Visibility.Visible : Visibility.Collapsed;
-        HomeStats.Configure(_settings, separated: true); // the quick actions are always above it
         MediaStats.Visibility = stats ? Visibility.Visible : Visibility.Collapsed;
-        MediaStats.Configure(_settings, separated: true);
+        ConfigureStats(); // under the separator, or under the wireless devices
         UpdateMicrophoneControls();
         foreach (var actions in new[] { HomeActions, MediaActions })
             actions.Choose(_settings.ShowTimerButton, _settings.ShowSoundButton, _settings.ShowMicButton);
@@ -443,10 +442,14 @@ public partial class IslandWindow : Window
     {
         bool stats = _settings.ShowStats, timer = _timer.IsActive, clock = _settings.ShowClock;
         bool shortcuts = _settings.Shortcuts.Count > 0, devices = HomeDevices.Children.Count > 0;
+        // The devices' rows, with the separator and spacing above them; the stats below lose their own separator.
+        double rings = devices ? WirelessRows * (RingSize + RingRowGap) - RingRowGap : 0;
         HomeView.Width = clock || stats || timer || shortcuts || devices ? 380 : 200; // just the quick actions
-        HomeView.Height = 28 + (clock ? 56 : 28) + (shortcuts ? 46 : 0) + (timer ? 46 : 0) + (devices ? 34 : 0) + (stats ? 62 : 0);
+        HomeView.Height = 28 + (clock ? 56 : 28) + (shortcuts ? 46 : 0) + (timer ? 46 : 0)
+            + (devices ? 21 + rings + (stats ? 1 : 0) : 0) + (stats ? 62 : 0);
         ExpandedMediaView.Width = MediaViewWidth();
-        ExpandedMediaView.Height = (stats ? 216 : 156) + (shortcuts ? 44 : 0) + (timer ? 44 : 0) + (devices ? 32 : 0);
+        ExpandedMediaView.Height = (stats ? 216 : 156) + (shortcuts ? 44 : 0) + (timer ? 44 : 0)
+            + (devices ? 19 + rings - (stats ? 7 : 0) : 0);
         MorphTo(_views[_current]);
     }
 

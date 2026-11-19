@@ -1,11 +1,12 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ZeiLand.Controls;
 using ZeiLand.Services;
 
 namespace ZeiLand;
 
-// Wireless mice, keyboards and headsets: a battery chip each in the open island, and notices when one is switched
+// Wireless mice, keyboards and headsets: a battery ring each in the open island, and notices when one is switched
 // on or off (or its receiver plugged in or out) and when a battery runs low.
 public partial class IslandWindow
 {
@@ -34,44 +35,80 @@ public partial class IslandWindow
                 && (d.Connected || d.Battery is not null)).ToList()
             : [];
 
+    private const double RingSize = 24, RingRowGap = 8;
+    private static readonly Brush RingBrush = new SolidColorBrush(Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)).Frozen();
+
     private void ShowWirelessDevices()
     {
         var devices = VisibleWirelessDevices();
         foreach (var panel in new[] { HomeDevices, MediaDevices })
         {
             panel.Children.Clear();
-            foreach (var device in devices) panel.Children.Add(DeviceChip(device));
-            panel.Visibility = devices.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            // Three to a row, under the CPU, GPU and RAM columns; more go on another row.
+            var gap = new Thickness(0, 0, 0, devices.Count > 3 ? RingRowGap : 0);
+            foreach (var device in devices) panel.Children.Add(DeviceItem(device, gap));
+            panel.Margin = new Thickness(0, 0, 0, -gap.Bottom);
         }
+        var visibility = devices.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        HomeDevicesRow.Visibility = MediaDevicesRow.Visibility = visibility;
+        ConfigureStats();
         UpdateExpandedSizes();
     }
 
-    private FrameworkElement DeviceChip(WirelessDevice device)
+    /// <summary>How many rows of devices the open island shows (three to a row).</summary>
+    private int WirelessRows => (HomeDevices.Children.Count + 2) / 3;
+
+    /// <summary>The stats sit under the separator, or under the devices' row (which then has the separator).</summary>
+    private void ConfigureStats()
+    {
+        bool devices = HomeDevices.Children.Count > 0;
+        HomeStats.Configure(_settings, separated: !devices);
+        MediaStats.Configure(_settings, separated: !devices);
+        HomeStats.Margin = new Thickness(0, devices ? 12 : 0, 0, 0);
+        MediaStats.Margin = new Thickness(0, devices ? 12 : 8, 0, 0);
+    }
+
+    /// <summary>A ring for the battery with the device's icon in it, and the percentage beside it.</summary>
+    private FrameworkElement DeviceItem(WirelessDevice device, Thickness margin)
     {
         var icon = (Style)FindResource("Icon");
-        var content = new StackPanel { Orientation = Orientation.Horizontal };
-        content.Children.Add(new TextBlock { Style = icon, Text = GlyphOf(device.Kind), FontSize = 13, Margin = new Thickness(0, 0, 6, 0) });
         bool low = device.Battery <= 20 && !device.Charging;
-        content.Children.Add(new TextBlock
+        var ring = new Grid { Width = RingSize, Height = RingSize };
+        ring.Children.Add(new BatteryRing
         {
-            Text = device.Battery is { } battery ? Loc.Percent(battery / 100.0) : "–",
-            FontSize = 12,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = low ? RedBrush : Brushes.White,
-            VerticalAlignment = VerticalAlignment.Center,
+            Level = (device.Battery ?? 0) / 100.0,
+            Brush = device.Charging ? GreenBrush : low ? RedBrush : RingBrush,
         });
-        if (device.Charging)
-            content.Children.Add(new TextBlock { Style = icon, Text = "", FontSize = 10, Margin = new Thickness(3, 0, 0, 0), Foreground = GreenBrush });
-        return new Border
+        ring.Children.Add(new TextBlock
         {
-            Background = SelectedTabBrush,
-            CornerRadius = new CornerRadius(9),
-            Padding = new Thickness(9, 3, 10, 3),
-            Margin = new Thickness(0, 0, 6, 0),
-            Child = content,
+            Style = icon,
+            Text = GlyphOf(device.Kind),
+            FontSize = 11,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Foreground = RingBrush,
+        });
+
+        var item = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = margin,
+            Background = Brushes.Transparent, // the tooltip shows over the gaps too
             Opacity = device.Connected ? 1 : 0.45,
             ToolTip = device.Connected ? NameOf(device) : $"{NameOf(device)} · {Loc.T("WirelessOff")}",
         };
+        item.Children.Add(ring);
+        item.Children.Add(new TextBlock
+        {
+            Text = device.Battery is { } battery ? Loc.Percent(battery / 100.0) : "–",
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = low ? RedBrush : Brushes.White,
+            Margin = new Thickness(8, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        if (device.Charging)
+            item.Children.Add(new TextBlock { Style = icon, Text = "", FontSize = 10, Margin = new Thickness(3, 0, 0, 0), Foreground = GreenBrush });
+        return item;
     }
 
     private void OnWirelessUpdated(WirelessDevice device, WirelessDevice? previous)

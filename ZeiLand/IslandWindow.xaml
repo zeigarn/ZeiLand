@@ -18,6 +18,15 @@
         <SolidColorBrush x:Key="MutedColor" Color="#FF453A" />
         <SolidColorBrush x:Key="TimerColor" Color="#FF9F0A" />
 
+        <!-- Wireless devices: under the separator the stats would have, in the stats' columns (the 34 is the
+             optimize button beside them); the stats follow without a line of their own. -->
+        <Style x:Key="DevicesRow" TargetType="Border">
+            <Setter Property="BorderBrush" Value="#1FFFFFFF" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Padding" Value="0,10,34,0" />
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+
         <Style x:Key="Icon" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
             <Setter Property="FontSize" Value="15" />
@@ -383,7 +392,9 @@
 
                     <controls:TimerStrip x:Name="MediaTimer" Grid.Row="4" Margin="0,8,0,0" Visibility="Collapsed" />
 
-                    <StackPanel x:Name="MediaDevices" Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,0" Visibility="Collapsed" />
+                    <Border x:Name="MediaDevicesRow" Grid.Row="5" Style="{StaticResource DevicesRow}" Margin="0,8,0,0">
+                        <UniformGrid x:Name="MediaDevices" Columns="3" />
+                    </Border>
 
                     <controls:StatsPanel x:Name="MediaStats" Grid.Row="6" Margin="0,8,0,0" />
                 </Grid>
@@ -417,9 +428,11 @@
 
                     <controls:TimerStrip x:Name="HomeTimer" Grid.Row="2" Margin="0,10,0,0" Visibility="Collapsed" />
 
-                    <!-- Wireless mice, keyboards and headsets: a chip each, with the battery. -->
-                    <StackPanel x:Name="HomeDevices" Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0"
-                                VerticalAlignment="Top" Visibility="Collapsed" />
+                    <!-- Wireless mice, keyboards and headsets: a battery ring each. -->
+                    <Border x:Name="HomeDevicesRow" Grid.Row="3" Style="{StaticResource DevicesRow}" Margin="0,10,0,0"
+                            VerticalAlignment="Bottom">
+                        <UniformGrid x:Name="HomeDevices" Columns="3" />
+                    </Border>
 
                     <controls:StatsPanel x:Name="HomeStats" Grid.Row="4" />
                 </Grid>
